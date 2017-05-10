@@ -74,7 +74,7 @@ def user_inputs_feas(log_phase, log_phase_id, user_inputs):
                            ['JackUp max payload [t]', 'sup', deck_cargo],
                            ['JackUp max water depth [m]', 'sup', max_bathymetry]],
 
-                  'Construction Support Vessel': [['Deck loading [t/m^2]', 'sup', deck_loading],
+                  'CSV': [['Deck loading [t/m^2]', 'sup', deck_loading],
                            ['Max. cargo [t]', 'sup', deck_cargo],
                            ['Deck space [m^2]', 'sup', deck_area],
                            ['Crane capacity [t]', 'sup', deck_cargo],
@@ -100,7 +100,7 @@ def user_inputs_feas(log_phase, log_phase_id, user_inputs):
                       ['Length [m]', 'sup', 'Terminal length [m]'],
                       ['Max. draft [m]', 'sup', 'Terminal draught [m]'],
                       ['Jacking capability [yes/no]','equal','yes']],
-                 'Construction Support Vessel': [['Beam [m]', 'sup', 'Entrance width [m]'],
+                 'CSV': [['Beam [m]', 'sup', 'Entrance width [m]'],
                       ['Length [m]', 'sup', 'Terminal length [m]'],
                       ['Max. draft [m]', 'sup', 'Terminal draught [m]']],
                  'JUP Barge': [['Beam [m]', 'sup', 'Entrance width [m]'],
