@@ -54,7 +54,7 @@ def init_e_export_phase(log_op, vessels, equipments, landfall,
         export_index = export_db.index.values
 
         trench_type_all = export_db['trench type [-]']
-        trench_type = export_db['trench type [-]'].iloc[0]
+        trench_type = eval(export_db['trench type [-]'].iloc[0])
 
         landfall_db = landfall
 
