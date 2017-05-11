@@ -86,6 +86,8 @@ def sched_e_export(seq, ind_sol, install, log_phase, site, entry_point,
         trench_type = 'Ploughing [m/h]'
     elif strategy == 'Static Export Cable Installation Strategy: no burial':
         pass
+    else:
+        raise ValueError('Unknown static export cable installation strategy')
     # number of vessel type in this feasible solution
     nb_ves_type = range(len(log_phase.op_ve[seq].sol[ind_sol]['VEs']))
     # list of the vessel(s) and equipment combination used for this feasible solution
