@@ -183,11 +183,11 @@ def install_port(device, sub_device,
             # check load out strategy
             loadout_methd = device['load out [-]'].ix[0]
             if loadout_methd == 'float away':
-                port_data_all = port_data
-                port_data = port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Dry-dock']
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Quay, dry-dock'] )
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Yard, dry-dock'] )
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'].isnull()] )
+                port_data = port_data[port_data[
+                            'Type of terminal [Quay/Dry-dock]'] == 'Dry-dock']
+            else:
+                port_data = port_data[port_data[
+                            'Type of terminal [Quay/Dry-dock]'] == 'Quay']
 
             max_dev_area = 0
             for ind_subdev in range(len(sub_device)):
@@ -199,15 +199,6 @@ def install_port(device, sub_device,
 
             max_total_load = max(max_total_load,max_dev_loading)
             max_total_area = max(max_total_area,max_dev_area)
-
-            # check load out strategy
-            loadout_methd = device['load out [-]'].ix[0]
-            if loadout_methd == 'float away':
-                port_data_all = port_data
-                port_data = port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Dry-dock']
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Quay, dry-dock'] )
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'] == 'Yard, dry-dock'] )
-                port_data = port_data.append( port_data_all[ port_data_all['Type of terminal [Quay/Dry-dock]'].isnull()] )
 
 
     # terminal load bearing minimum requirement
