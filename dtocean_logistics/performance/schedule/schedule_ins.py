@@ -248,7 +248,7 @@ def waitingTime(log_phase, log_phase_id, metocean, rt_dt, sched_sol):
 
             msg_str = ', '.join(msg)
             module_logger.warning("Restrictive operational limit found in "
-                                  "phase {}: {}".format(log_phase_id,
+                                  "phase {}: {}".format(log_phase.description,
                                                         msg_str))
 
         # start_time = timeit.default_timer()      ## TIME ASSESSMENT        
@@ -338,9 +338,9 @@ def waitingTime(log_phase, log_phase_id, metocean, rt_dt, sched_sol):
             all_wait_time.append(mean_wait_time)
             
             if mean_wait_time > 500:
-                module_logger.warning("Long waiting time found in "
-                                      "phase {}: {}".format(log_phase_id,
-                                                            mean_wait_time))
+                module_logger.warning("Long waiting time found in phase {}: "
+                                      "{}".format(log_phase.description,
+                                                  mean_wait_time))
             
         else:
 
