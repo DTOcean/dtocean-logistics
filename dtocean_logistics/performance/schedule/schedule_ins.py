@@ -248,7 +248,8 @@ def waitingTime(log_phase, log_phase_id, metocean, rt_dt, sched_sol):
 
             msg_str = ', '.join(msg)
             module_logger.warning("Restrictive operational limit found in "
-                                  "journey {}: ".format(jour) + msg_str)
+                                  "phase {}: {}".format(log_phase_id,
+                                                        msg_str))
 
         # start_time = timeit.default_timer()      ## TIME ASSESSMENT        
 
@@ -327,11 +328,20 @@ def waitingTime(log_phase, log_phase_id, metocean, rt_dt, sched_sol):
                 if wt < 0:
                     wt = 0
                 wait_time.append(wt)
+                
             year = year + 1
 
         if wait_time:
+            
             # calculate average waiting time
-            all_wait_time.append(sum(wait_time)/float(len(wait_time)))
+            mean_wait_time = sum(wait_time) / float(len(wait_time))
+            all_wait_time.append(mean_wait_time)
+            
+            if mean_wait_time > 500:
+                module_logger.warning("Long waiting time found in "
+                                      "phase {}: {}".format(log_phase_id,
+                                                            mean_wait_time))
+            
         else:
 
             EXIT_FLAG = 'NoWWindows'
