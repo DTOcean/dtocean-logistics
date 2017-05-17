@@ -1,0 +1,13 @@
+# REQUIREMENTS FOR CONDA INSTALLATION
+
+# INSTALLATION REQUIRED DEPENDENCIES
+geopy
+networkx
+numpy
+pandas
+polite >=0.9
+utm
+xlrd
+
+# TEST DEPENDENCIES
+pytest-cov
