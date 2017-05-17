@@ -9,40 +9,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Add high DPI scaling widgets which activate when Windows virtual DPI exceeds
-  100. Improves look and feel on high DPI displays.
-- Split high low and shared QtDesigner files into separate directories.
-- Added dynamic generation of tools menu from plugins created in the tools
-  module.
-- Added constraints plot tool.
-- Allow filtering of database when only sites or only devices are defined.
-- Add test for opening main window. Requires pytest-qt and pytest-mock.
-- Add tests for scenario activation upto and including pipeline activation
-  without a database connected.
-- Add change log.
+- Added warning about long waiting times.
+- Add README and CHANGELOG
+- Add continuous integration setup files.
 
 ### Changed
 
-- Changed dtocean-qt dependency to 0.9.1.
-- Updated README.
-- Removed "schema" from database configuration dialog.
+- Removed input checks for variables which are not currently used in the code.
+- Updated warnings about operational limits.
 
 ### Fixed
 
-- Fix bug in InputTriStateTable widget that stopped input of Observed Receptors
-  variable in environmental assessment theme.
-- Fix issue with displaying PointList data (such as the user defined array
-  layout) when z-coordinates are not set.
+- Fixed some incosistent definitions of vessel names.
+- Fixed matching of port terminal type
 
+### Removed
 
-## [1.0.0] - 2017-02-23
+- Removed waiting times from cost calculation due to long potential waits.
+
+## [1.0.0] - 2017-01-05
 
 ### Added
 
-- Initial import of dtocean-gui from SETIS.
+- Initial import of dtocean-logistics from SETIS.
 
-### Changed
-
-- Changed package name to dtocean-app.
-- Changed pandas-qt dependency to dtocean-qt.
 
