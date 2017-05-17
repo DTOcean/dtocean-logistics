@@ -55,7 +55,7 @@ def init_e_array_phase(log_op, vessels, equipments, static_cable,
         array_index = array_db.index.values
 
         trench_type_all = array_db['trench type [-]']
-        trench_type = eval(array_db['trench type [-]'].iloc[0])
+        trench_type = array_db['trench type [-]'].iloc[0]
         
         route_db = cable_route
         array_route = route_db[route_db['static cable id [-]'].isin(array_index)]
