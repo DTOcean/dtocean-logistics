@@ -63,7 +63,7 @@ class CleanPyc(Command):
                 yield os.path.join(root, fname)
 
 setup(name='dtocean-logistics',
-      version='1.1.dev0',
+      version='1.1.dev1',
       description='Logistics module for the DTOcean tools',
       author=('Paulo Chainho, '
               'Boris Teillant, '
