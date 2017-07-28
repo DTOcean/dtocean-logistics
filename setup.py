@@ -80,9 +80,11 @@ setup(name='dtocean-logistics',
       install_requires=[
           'geopy',
           'networkx',
+          'matplotlib',
           'numpy',
           'pandas',
           'polite>=0.9',
+          'scipy',
           'utm',
           'xlrd'
       ],
