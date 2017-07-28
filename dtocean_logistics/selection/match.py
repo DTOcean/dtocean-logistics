@@ -52,7 +52,7 @@ def compatibility_ve(install, log_phase, port_chosen_data):
     len_sols_ve_indxs_comb_acum = 0
     # Go through different sequence options
     for seq in log_phase.op_ve:
-        nr_sol = 0
+        
         sols_ve_indxs_combs_incomb = []
         # Go through different possible combination
         for combi in range(len(log_phase.op_ve[seq].ve_combination)):
@@ -160,208 +160,25 @@ def compatibility_ve(install, log_phase, port_chosen_data):
     # print 'output from itertools:' # FOR DEBUGGING!!!
     nr_sol_feas = len_sols_ve_indxs_comb_acum
 
-
-
-
     # Apply MATCHING
-    port_pd = port_chosen_data
 
     # *** Vessel/Equipment ***
     req_m_ev = install['requirement'][4]
-    match_rq = dict.fromkeys(req_m_ev.keys())
-    for typ_req in range(len(req_m_ev)):
-
-        m_ev_key_req = req_m_ev.keys()[typ_req]
-        for seq in range(len(log_phase.op_ve)):
-            for combin in range(len(sols_ve_indxs_combs_inseq[seq])):
-                ve_combinations = sols_ve_indxs_combs_inseq[seq][combin]
-                LEN_combi = len(ve_combinations)
-                ind_ve_combi = -1
-                DELETED = 0
-                while ind_ve_combi < LEN_combi:
-                    if DELETED==0:
-                        ind_ve_combi = ind_ve_combi+1
-                    else:
-                        DELETED=0
-
-                    # print ind_ve_combi
-                    if ind_ve_combi==LEN_combi:
-                        break
-
-                    ve_comb = ve_combinations[ind_ve_combi]
-                    ve_comb_ves = ve_combinations[ind_ve_combi][0]
-                    ve_comb_eqs = ve_combinations[ind_ve_combi][1]
-                    for ind_eq_in_combi in range(len(ve_comb_eqs)):
-                        if DELETED==1:
-                            break
-
-                        m_e_key_type = ve_comb_eqs[ind_eq_in_combi][0]
-                        eq_pd = ve_comb_eqs[ind_eq_in_combi][2] # panda series data
-                        req_ves = ve_comb_eqs[ind_eq_in_combi][3]  # vessel (index) required to use equipment
-
-                        m_v_key_type = ve_comb_ves[req_ves][0]
-                        ves_pd = ve_comb_ves[req_ves][2] # panda series data
-                        if m_e_key_type == m_ev_key_req:
-                           for req in range(len(req_m_ev[m_ev_key_req])):
-                               if DELETED==1:
-                                   break
-
-                               m_ev_read = req_m_ev[m_ev_key_req][req]
-                               if m_ev_read[0] == 'PI': # specific to rock filter bags
-                                   aux_op = math.pi
-                               elif m_ev_read[0] == '4': # specific to rock filter bags
-                                   aux_op = 4.0
-                               else:
-                                   aux_op = eq_pd[m_ev_read[0]]
-
-                               for ind_rd in range(1,len(m_ev_read)-1,2):
-                                   if m_ev_read[ind_rd] == 'plus':
-                                       aux_op = aux_op + eq_pd[m_ev_read[ind_rd+1]]
-                                   elif m_ev_read[ind_rd] == 'mul':
-                                       aux_op = aux_op * eq_pd[m_ev_read[ind_rd+1]]
-                                   elif m_ev_read[ind_rd] == 'div':
-                                       aux_op = aux_op / eq_pd[m_ev_read[ind_rd+1]]
-                                   elif m_ev_read[ind_rd] == 'sup':
-                                       if deck_area_req == 'matching' or deck_cargo_req == 'matching' or deck_loading_req == 'matching': # specific to external protection
-                                           area_req = [0]
-                                           cargo_req = [0]
-                                           load_req = [0]
-                                           for index_eq in range(len(ve_combinations[ind_ve_combi][1])):
-                                               if ve_combinations[ind_ve_combi][1][index_eq][0] == 'mattress':
-                                                   area_req.append( ve_combinations[ind_ve_combi][1][index_eq][2]['Unit lenght [m]'] * ve_combinations[ind_ve_combi][1][1][2]['Unit width [m]'] )
-                                                   cargo_req.append( ve_combinations[ind_ve_combi][1][index_eq][2]['Unit weight air [t]'] )
-                                                   load_req.append( (ve_combinations[ind_ve_combi][1][index_eq][2]['Unit weight air [t]']) / (ve_combinations[ind_ve_combi][1][index_eq][2]['Unit lenght [m]'] * ve_combinations[ind_ve_combi][1][1][2]['Unit width [m]']) )
-                                               elif ve_combinations[ind_ve_combi][1][index_eq][0] == 'rock filter bags ':
-                                                   area_req.append( (math.pi/4) * ve_combinations[ind_ve_combi][1][index_eq][2]['Diameter [m]'] * ve_combinations[ind_ve_combi][1][index_eq][2]['Diameter [m]'] )
-                                                   cargo_req.append( ve_combinations[ind_ve_combi][1][index_eq][2]['Weight [t]'] )
-                                                   load_req.append( (ve_combinations[ind_ve_combi][1][index_eq][2]['Weight [t]']) / ((math.pi/4) * ve_combinations[ind_ve_combi][1][index_eq][2]['Diameter [m]'] * ve_combinations[ind_ve_combi][1][index_eq][2]['Diameter [m]']) )
-                                           deck_area_req = sum(area_req)
-                                           deck_cargo_req = sum(cargo_req)
-                                           deck_loading_req = max(load_req)
-                                       if m_ev_read[ind_rd+1] == 'Deck space [m^2]':
-                                           req_check = aux_op + deck_area_req
-                                       elif m_ev_read[ind_rd+1] == 'Max cargo [t]':
-                                           req_check = aux_op + deck_cargo_req
-                                       elif m_ev_read[ind_rd+1] == 'Deck loading [t/m^2]':
-                                           req_check = aux_op + deck_loading_req
-                                       else:
-                                           req_check = aux_op
-
-                                       if ves_pd[m_ev_read[ind_rd+1]] >= req_check or numpy.isnan(ves_pd[m_ev_read[ind_rd+1]]):
-                                           continue
-                                       else:
-                                           del sols_ve_indxs_combs_inseq[seq][combin][ind_ve_combi]
-                                           DELETED = 1
-                                           LEN_combi = LEN_combi-1
-
-                                   elif m_ev_read[ind_rd] == 'equal':
-                                       if m_ev_read[ind_rd+1] == 'Deck space [m^2]':
-                                           req_check = aux_op + deck_area_req
-                                       elif m_ev_read[ind_rd+1] == 'Max cargo [t]':
-                                           req_check = aux_op + deck_cargo_req
-                                       elif m_ev_read[ind_rd+1] == 'Deck loading [t/m^2]':
-                                           req_check = aux_op + deck_loading_req
-                                       else:
-                                           req_check = aux_op
-
-                                       if ves_pd[m_ev_read[ind_rd+1]] == req_check or numpy.isnan(ves_pd[m_ev_read[ind_rd+1]]):
-                                            continue
-                                       else:
-                                           del sols_ve_indxs_combs_inseq[seq][combin][ind_ve_combi]
-                                           DELETED = 1
-                                           LEN_combi = LEN_combi-1
-
-
-    # PUT PORT SELECTION HERE????
+    sols_ve_indxs_combs_inseq = compatibility_vessels(
+                                                    req_m_ev,
+                                                    log_phase,
+                                                    sols_ve_indxs_combs_inseq,
+                                                    deck_area_req,
+                                                    deck_cargo_req,
+                                                    deck_loading_req)
 
     # *** Port/Vessel ***
-    # print 'Port/Vessel:'
+    port_pd = port_chosen_data
     req_m_pv = install['requirement'][2]
-    match_rq_pv = dict.fromkeys(req_m_pv.keys())
-    for typ_req in range(len(req_m_pv)):
-        m_pv_key_req = req_m_pv.keys()[typ_req]
-        for seq in range(len(log_phase.op_ve)):
-            # print 'seq'
-            # print seq
-            for combin in range(len(sols_ve_indxs_combs_inseq[seq])):
-                # print 'combin'
-                # print combin
-                ve_combinations = sols_ve_indxs_combs_inseq[seq][combin]
-                LEN_combi = len(ve_combinations)
-                ind_ve_combi = -1
-                DELETED = 0
-                while ind_ve_combi < LEN_combi:
-                    if DELETED==0:
-                        ind_ve_combi = ind_ve_combi+1
-                    else:
-                        DELETED=0
-
-                    # print ind_ve_combi
-                    if ind_ve_combi==LEN_combi:
-                        break
-
-                    ve_comb = ve_combinations[ind_ve_combi]
-                    ve_comb_ves = ve_combinations[ind_ve_combi][0]
-                    ve_comb_eqs = ve_combinations[ind_ve_combi][1]
-                    for ind_ves_in_combi in range(len(ve_comb_ves)):
-                        if DELETED==1:
-                            break
-
-                        m_v_key_type = ve_comb_ves[ind_ves_in_combi][0]
-                        ves_pd = ve_comb_ves[ind_ves_in_combi][2] # panda series data
-                        if m_v_key_type == m_pv_key_req:
-                            for req in range(len(req_m_pv[m_pv_key_req])):
-                               if DELETED==1:
-                                   break
-
-                               m_pv_read = req_m_pv[m_pv_key_req][req]
-                               if not m_pv_read[0] == 'Jacking capability [yes/no]':
-                                   aux_op = ves_pd[m_pv_read[0]]
-
-                               for ind_rd in range(1,len(m_pv_read)-1,2):
-                                   if m_pv_read[ind_rd] == 'plus':
-                                       aux_op = aux_op + ves_pd[m_pv_read[ind_rd+1]]
-                                   elif m_pv_read[ind_rd] == 'mul':
-                                       aux_op = aux_op * ves_pd[m_pv_read[ind_rd+1]]
-                                   elif m_pv_read[ind_rd] == 'div':
-                                       aux_op = aux_op / ves_pd[m_pv_read[ind_rd+1]]
-                                   elif m_pv_read[ind_rd] == 'sup':
-                                       req_check = aux_op
-                                       if m_pv_read[ind_rd+1] == 'Entrance width [m]' and port_pd[m_pv_read[ind_rd+1]]==0:
-                                           continue
-                                       if port_pd[m_pv_read[ind_rd+1]] >= req_check or numpy.isnan(port_pd[m_pv_read[ind_rd+1]]):
-                                           continue
-                                       else:
-                                           if m_pv_read[ind_rd+1] == 'Entrance width [m]':
-
-                                               msg = ("Some vessels being "
-                                                      "considerde are too "
-                                                      "wide for the entrance "
-                                                      " of the selected port.")
-
-                                               module_logger.warning(msg)
-
-                                           else:
-                                            del sols_ve_indxs_combs_inseq[seq][combin][ind_ve_combi]
-                                            DELETED = 1
-                                            LEN_combi = LEN_combi-1
-
-                                   elif m_pv_read[ind_rd] == 'equal':
-                                       if m_pv_read[ind_rd-1] == 'Jacking capability [yes/no]':
-                                            if port_pd[m_pv_read[ind_rd-1]]=='No': # Jack-up vessel is incompatible with port
-                                                del sols_ve_indxs_combs_inseq[seq][combin][ind_ve_combi]
-                                                DELETED = 1
-                                                LEN_combi = LEN_combi-1
-                                            else:
-                                                continue
-                                       else:
-                                           req_check = aux_op
-                                           if port_pd[m_pv_read[ind_rd+1]] == req_check or numpy.isnan(port_pd[m_pv_read[ind_rd+1]]):
-                                              continue
-                                           else:
-                                                del sols_ve_indxs_combs_inseq[seq][combin][ind_ve_combi]
-                                                DELETED = 1
-                                                LEN_combi = LEN_combi-1
+    sols_ve_indxs_combs_inseq = compatibility_ports(req_m_pv,
+                                                    log_phase,
+                                                    sols_ve_indxs_combs_inseq,
+                                                    port_pd)
 
     # # *** Port/Equipment ***
     # req_m_pe = install['requirement'][3]
@@ -419,3 +236,330 @@ def compatibility_ve(install, log_phase, port_chosen_data):
     log_phase.nr_sol_match = nr_sol_match
 
     return final_sol, log_phase, EXIT_FLAG
+
+
+def compatibility_vessels(req_m_ev,
+                          log_phase,
+                          sols_ve_indxs_combs_inseq,
+                          deck_area_req,
+                          deck_cargo_req,
+                          deck_loading_req):
+    
+    # *** Vessel/Equipment ***
+    new_combs_inseq = []
+
+    for combin in sols_ve_indxs_combs_inseq:
+        
+        new_ve_combinations = []
+        
+        for ve_combinations in combin:
+            
+            valid_combs = []
+
+            for ve_comb in ve_combinations:
+
+                ve_comb_ves = ve_comb[0]
+                ve_comb_eqs = ve_comb[1]
+                all_combos = True
+                
+                for eq_in_combi in ve_comb_eqs:
+
+                    m_e_key_type = eq_in_combi[0]
+                    eq_pd = eq_in_combi[2] # panda series data
+                    req_ves = eq_in_combi[3]  # vessel (index) required to use equipment
+
+                    ves_pd = ve_comb_ves[req_ves][2] # panda series data
+                    
+                    if m_e_key_type in req_m_ev:
+                        
+                        check_combo = check_vessels(ve_comb_eqs,
+                                                    m_e_key_type,
+                                                    req_m_ev,
+                                                    eq_pd,
+                                                    ves_pd,
+                                                    deck_area_req,
+                                                    deck_cargo_req,
+                                                    deck_loading_req)
+                        
+                        all_combos = all_combos and check_combo
+                            
+                if all_combos: valid_combs.append(ve_comb)
+                
+            new_ve_combinations.append(valid_combs)
+            
+        new_combs_inseq.append(new_ve_combinations)
+        
+    return new_combs_inseq
+
+
+def check_vessels(ve_comb_eqs,
+                  m_ev_key_req,
+                  req_m_ev,
+                  eq_pd,
+                  ves_pd,
+                  deck_area_req,
+                  deck_cargo_req,
+                  deck_loading_req):
+
+    for m_ev_read in req_m_ev[m_ev_key_req]:
+        
+        if m_ev_read[0] == 'PI': # specific to rock filter bags
+            aux_op = math.pi
+        elif m_ev_read[0] == '4': # specific to rock filter bags
+            aux_op = 4.0
+        else:
+            aux_op = eq_pd[m_ev_read[0]]
+
+        for ind_rd in range(1, len(m_ev_read) - 1, 2):
+            
+            next_ind = ind_rd + 1
+           
+            if m_ev_read[ind_rd] == 'plus':
+               
+                aux_op = aux_op + eq_pd[m_ev_read[ind_rd + 1]]
+               
+            elif m_ev_read[ind_rd] == 'mul':
+               
+                aux_op = aux_op * eq_pd[m_ev_read[ind_rd + 1]]
+               
+            elif m_ev_read[ind_rd] == 'div':
+               
+                aux_op = aux_op / eq_pd[m_ev_read[ind_rd + 1]]
+               
+            elif m_ev_read[ind_rd] == 'sup':
+               
+                if (deck_area_req == 'matching' or
+                    deck_cargo_req == 'matching' or
+                    deck_loading_req == 'matching'): # specific to external protection
+                   
+                    area_req = [0]
+                    cargo_req = [0]
+                    load_req = [0]
+                   
+                    for test in ve_comb_eqs:
+                       
+                        dims = test[2]
+                       
+                        if test[0] == 'mattress':
+                           
+                            area = dims['Unit lenght [m]'] * \
+                                                   dims['Unit width [m]']
+                            cargo = dims['Unit weight air [t]']
+                            load = cargo / area
+                           
+                            area_req.append(area)
+                            cargo_req.append(cargo)
+                            load_req.append(load)
+                            
+                        elif test[0] == 'rock filter bags ':
+                            
+                            area = (math.pi / 4.) * dims['Diameter [m]'] ** 2
+                            cargo = dims['Unit weight air [t]']
+                            load = cargo / area
+
+                            area_req.append(area)
+                            cargo_req.append(cargo)
+                            load_req.append(load)
+                            
+                    deck_area_req = sum(area_req)
+                    deck_cargo_req = sum(cargo_req)
+                    deck_loading_req = max(load_req)
+                   
+                if m_ev_read[next_ind] == 'Deck space [m^2]':
+                    req_check = aux_op + deck_area_req
+                elif m_ev_read[next_ind] == 'Max cargo [t]':
+                    req_check = aux_op + deck_cargo_req
+                elif m_ev_read[next_ind] == 'Deck loading [t/m^2]':
+                    req_check = aux_op + deck_loading_req
+                else:
+                    req_check = aux_op
+                    
+                val_check = ves_pd[m_ev_read[next_ind]]
+
+                if not numpy.isnan(val_check) and val_check < req_check:
+                    
+                    log_match_vessel(ves_pd,
+                                     m_ev_read[ind_rd],
+                                     m_ev_read[next_ind],
+                                     req_check)
+                    
+                    return False
+
+            elif m_ev_read[ind_rd] == 'equal':
+               
+                if m_ev_read[next_ind] == 'Deck space [m^2]':
+                    req_check = aux_op + deck_area_req
+                elif m_ev_read[next_ind] == 'Max cargo [t]':
+                    req_check = aux_op + deck_cargo_req
+                elif m_ev_read[next_ind] == 'Deck loading [t/m^2]':
+                    req_check = aux_op + deck_loading_req
+                else:
+                    req_check = aux_op
+                    
+                val_check = ves_pd[m_ev_read[next_ind]]
+
+                if not numpy.isnan(val_check) and val_check != req_check:
+                    
+                    log_match_vessel(ves_pd,
+                                     m_ev_read[ind_rd],
+                                     m_ev_read[next_ind],
+                                     req_check)
+                    
+                    return False
+                
+    return True
+
+
+def compatibility_ports(req_m_pv,
+                        log_phase,
+                        sols_ve_indxs_combs_inseq,
+                        port_pd):
+    
+    # *** Port/Vessel ***
+    new_combs_inseq = []
+
+    for combin in sols_ve_indxs_combs_inseq:
+        
+        new_ve_combinations = []
+        
+        for ve_combinations in combin:
+            
+            valid_combs = []
+
+            for ve_comb in ve_combinations:
+
+                ve_comb_ves = ve_comb[0]
+                ve_comb_eqs = ve_comb[1]
+                all_combos = True
+                
+                for eq_in_combi in ve_comb_eqs:
+
+                    m_pv_key_req = eq_in_combi[0]
+                    req_ves = eq_in_combi[3]  # vessel (index) required to use equipment
+
+                    ves_pd = ve_comb_ves[req_ves][2] # panda series data
+                    
+                    if m_pv_key_req in req_m_pv:
+                                                
+                        check_combo = check_ports(ve_comb_eqs,
+                                                  m_pv_key_req,
+                                                  req_m_pv,
+                                                  port_pd,
+                                                  ves_pd)
+                        
+                        all_combos = all_combos and check_combo
+                            
+                if all_combos: valid_combs.append(ve_comb)
+                
+            new_ve_combinations.append(valid_combs)
+            
+        new_combs_inseq.append(new_ve_combinations)
+        
+    return new_combs_inseq
+
+
+def check_ports(ve_comb_eqs,
+                m_pv_key_req,
+                req_m_pv,
+                port_pd,
+                ves_pd):
+    
+    for m_pv_read in req_m_pv[m_pv_key_req]:
+
+        if not m_pv_read[0] == 'Jacking capability [yes/no]':
+            aux_op = ves_pd[m_pv_read[0]]
+
+        for ind_rd in range(1, len(m_pv_read) - 1, 2):
+           
+            next_ind = ind_rd + 1
+           
+            if m_pv_read[ind_rd] == 'plus':
+               
+                aux_op = aux_op + ves_pd[m_pv_read[next_ind]]
+               
+            elif m_pv_read[ind_rd] == 'mul':
+               
+                aux_op = aux_op * ves_pd[m_pv_read[next_ind]]
+               
+            elif m_pv_read[ind_rd] == 'div':
+               
+                aux_op = aux_op / ves_pd[m_pv_read[next_ind]]
+               
+            elif m_pv_read[ind_rd] == 'sup':
+               
+                req_check = aux_op
+                val_check = port_pd[m_pv_read[next_ind]]
+                    
+                if not numpy.isnan(val_check) and val_check < req_check:
+                    
+                    log_match_port(port_pd,
+                                   m_pv_read[ind_rd],
+                                   m_pv_read[next_ind],
+                                   req_check)
+                    
+                    return False
+
+            elif m_pv_read[ind_rd] == 'equal':
+                
+                if m_pv_read[ind_rd - 1] == 'Jacking capability [yes/no]':
+                   
+                    # Jack-up vessel is incompatible with port
+                    if port_pd['Jacking capability [yes/no]'] == 'no':
+                        
+                        log_match_port(port_pd,
+                                       m_pv_read[ind_rd],
+                                       m_pv_read[next_ind],
+                                       req_check)
+                        
+                        return False
+                    
+                else:
+                    
+                    req_check = aux_op
+                    val_check = port_pd[m_pv_read[next_ind]]
+                    
+                    if not numpy.isnan(val_check) and val_check != req_check:
+                    
+                        log_match_port(port_pd,
+                                       m_pv_read[ind_rd],
+                                       m_pv_read[next_ind],
+                                       req_check)
+                        
+                        return False
+
+
+def log_match_vessel(ves_pd, meth, para, val):
+    
+    logStr = ("Vessel(s) '{}' from class '{}' did not meet "
+              "requirement (including any safety factors): ").format(
+                                                  ves_pd["Name"],
+                                                  ves_pd["Vessel type [-]"])
+    log_match(logStr, meth, para, val)
+    
+    return
+
+
+def log_match_port(port_pd, meth, para, val):
+    
+    logStr = ("Port '{}' did not meet requirement (including any safety "
+              "factors): ").format(port_pd["Name"])
+    log_match(logStr, meth, para, val)
+    
+    return
+
+
+def log_match(logStr, meth, para, val):
+    
+    if meth == "sup":
+        requirement_str = "{} => {}"
+    elif meth == "equal":
+        requirement_str = "{} == {}"
+        
+    requirement_str = requirement_str.format(para, val)
+        
+    logStr = logStr + "{}".format(requirement_str)
+    
+    module_logger.info(logStr)
+    
+    return
+                   
