@@ -19,7 +19,7 @@ def foundations():
     return df
     
 
-def test_WaitingTime_get_weather_window(foundations):
+def test_get_max_load_area_foundations(foundations):
     
     load, area = get_max_load_area_foundations(foundations)
     
