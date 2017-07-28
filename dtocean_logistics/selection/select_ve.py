@@ -1,6 +1,9 @@
 """
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org, pedro.vicente@wavec.org
+@author: WavEC Offshore Renewables, Mathew Topper
+email: boris.teillant@wavec.org,
+       paulo@wavec.org,
+       pedro.vicente@wavec.org,
+       dataonlygreater@gmail.com
 
 select_ve.py is responsible for the first part of the selection step in the Logistic
 module methodology. It contains two functions capable to select vessels and equipments 
@@ -15,7 +18,13 @@ See also: ...
                     http://www.wavec.org/en
 
 """
+
+import logging
+
 import numpy as np
+
+# Start logger
+module_logger = logging.getLogger(__name__)
 
 
 def select_e(install, log_phase):
@@ -71,16 +80,33 @@ def select_e(install, log_phase):
                                 e_pd_nan = feas_e_pd                                
                                 feas_e_pd = feas_e_pd[feas_e_pd[e_para] >= e_val]
                                 feas_e_pd = feas_e_pd.append( e_pd_nan[e_pd_nan[e_para].isnull()] ) # append all the vessels with empty fields
+                                log_match_e(e_key_req,
+                                            e_meth,
+                                            e_para,
+                                            e_val,
+                                            e_pd_nan,
+                                            feas_e_pd)
 
                             elif e_meth == 'inf':
                                   e_pd_nan = feas_e_pd                                     
                                   feas_e_pd = feas_e_pd[feas_e_pd[e_para] <= e_val]
                                   feas_e_pd = feas_e_pd.append( e_pd_nan[e_pd_nan[e_para].isnull()] ) # append all the vessels with empty fields
-
+                                  log_match_e(e_key_req,
+                                              e_meth,
+                                              e_para,
+                                              e_val,
+                                              e_pd_nan,
+                                              feas_e_pd)
                             elif e_meth == 'equal':
                                   e_pd_nan = feas_e_pd                                
                                   feas_e_pd = feas_e_pd[feas_e_pd[e_para] == e_val]
                                   feas_e_pd = feas_e_pd.append( e_pd_nan[e_pd_nan[e_para].isnull()] ) # append all the vessels with empty fields
+                                  log_match_e(e_key_req,
+                                              e_meth,
+                                              e_para,
+                                              e_val,
+                                              e_pd_nan,
+                                              feas_e_pd)
 
                         # Check if no equipment is feasible within the req for this particular ve_combination
                         if len(feas_e_pd.index)==0:
@@ -152,7 +178,7 @@ def select_v(install, log_phase):
                     feas_v_pd = v_pd  # all vessel are considered for feasibility evaluation
 
                     if v_key_phase == v_key_req:
-
+                        
                        for req in range(len(req_v[v_key_req])):  # loop over the number of requirements
                            v_para = req_v[v_key_req][req][0]
                            v_meth = req_v[v_key_req][req][1]
@@ -165,16 +191,31 @@ def select_v(install, log_phase):
                                v_pd_nan = feas_v_pd
                                feas_v_pd = feas_v_pd[feas_v_pd[v_para] >= v_val]
                                feas_v_pd = feas_v_pd.append( v_pd_nan[v_pd_nan[v_para].isnull()] ) # append all the vessels with empty fields
-
+                               log_match_v(v_meth,
+                                           v_para,
+                                           v_val,
+                                           v_pd_nan,
+                                           feas_v_pd)
+    
                            elif v_meth == 'inf':
                                  v_pd_nan = feas_v_pd                               
                                  feas_v_pd = feas_v_pd[feas_v_pd[v_para] <= v_val]
                                  feas_v_pd = feas_v_pd.append( v_pd_nan[v_pd_nan[v_para].isnull()] ) # append all the vessels with empty fields
-
+                                 log_match_v(v_meth,
+                                             v_para,
+                                             v_val,
+                                             v_pd_nan,
+                                             feas_v_pd)
+                                 
                            elif v_meth == 'equal':
                                  v_pd_nan = feas_v_pd
                                  feas_v_pd = feas_v_pd[feas_v_pd[v_para] == v_val]
                                  feas_v_pd = feas_v_pd.append( v_pd_nan[v_pd_nan[v_para].isnull()] ) # append all the vessels with empty fields
+                                 log_match_v(v_meth,
+                                             v_para,
+                                             v_val,
+                                             v_pd_nan,
+                                             feas_v_pd)
 
                        # Check if no vessel is feasible within the req for this particular ve_combination
                        if len(feas_v_pd.index)==0:
@@ -202,3 +243,73 @@ def select_v(install, log_phase):
 
                 combi = combi + 1
     return ves, log_phase
+
+
+def log_match_e(e_type, e_meth, e_para, e_val, e_pd_nan, feas_e_pd):
+    
+    # Look for any failed matches
+    failed = list(set(e_pd_nan.index) - set(feas_e_pd.index))
+    
+    if not failed: return
+    
+    equipment_numbers = [str(x) for x in failed]
+    equipment_numbers_str = ", ".join(equipment_numbers)
+        
+    logStr = ("feasible equipment '{}' from class '{}' did not meet "
+              "requirement (including any safety factors): ").format(
+                                                      equipment_numbers_str,
+                                                      e_type)
+    
+    log_match(logStr, failed, e_meth, e_para, e_val, e_pd_nan)
+    
+    return
+
+
+def log_match_v(v_meth, v_para, v_val, v_pd_nan, feas_v_pd):
+    
+    # Look for any failed matches
+    failed = list(set(v_pd_nan.index) - set(feas_v_pd.index))
+    
+    if not failed: return
+    
+    if "Name" in v_pd_nan.columns:
+        vessel_names = v_pd_nan.loc[failed, "Name"].sort_values()
+        vessel_names_str = ", ".join(vessel_names)
+        vessel_str = "feasible vessel(s) '{}'".format(vessel_names_str)
+    else:
+        vessel_str = "{} feasible vessel(s)".format(len(failed))
+        
+    vessel_type_str = v_pd_nan.iloc[0]["Vessel type [-]"]
+    
+    logStr = ("{} from class '{}' did not meet "
+              "requirement (including any safety factors): ").format(
+                                                          vessel_str,
+                                                          vessel_type_str)
+    
+    log_match(logStr, failed, v_meth, v_para, v_val, v_pd_nan)
+    
+    return
+
+
+def log_match(logStr, failed, meth, para, val, pd_nan):
+    
+    if meth == "sup":
+        requirement_str = "{} => {}"
+    elif meth == "inf":
+        requirement_str = "{} <= {}"
+    elif meth == "equal":
+        requirement_str = "{} == {}"
+        
+    requirement_str = requirement_str.format(para, val)
+        
+    logStr = logStr + "{}".format(requirement_str)
+    
+    # Check if all vessels failed
+    if len(failed) == len(pd_nan):
+        logStr = "All remaining " + logStr
+        module_logger.warning(logStr)
+    else:
+        logStr = "Remaining " + logStr
+        module_logger.info(logStr)
+    
+    return
