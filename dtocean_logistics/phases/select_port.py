@@ -137,23 +137,20 @@ def install_port(device, sub_device,
 
             max_total_load = max(load_u)
             max_total_area = max(area_u)
+            
+            
+        if instl_ord in ['Gravity',
+                         'M_drag',
+                         'M_direct',
+                         'M_suction',
+                         'M_pile',
+                         'Driven',
+                         'S_structure']:
 
-
-        if instl_ord == 'Gravity' or instl_ord == 'M_drag' or instl_ord == 'M_direct' or \
-           instl_ord == 'M_suction' or instl_ord == 'M_pile' or instl_ord == 'Driven' or instl_ord == 'S_structure':
-            # calculate loading and projected area of foundations/anchors
-            max_moo_loading = 0
-            max_moo_area = 0
-            for ind_found in range(len(foundation)):
-                load_u = foundation['dry mass [kg]'][ind_found] / (foundation['length [m]'][ind_found] * foundation['width [m]'][ind_found])
-                area_u = foundation['length [m]'][ind_found] * foundation['width [m]'][ind_found]
-
-                max_moo_loading = max(max_moo_loading,load_u)
-                max_moo_area = max(max_moo_area,area_u)
-
-            max_total_load = max(max_total_load,max_moo_loading)
-            max_total_area = max(max_total_area,max_moo_area)
-
+            (max_total_load,
+             max_total_area) = get_max_load_area_foundations(foundation,
+                                                             max_total_load,
+                                                             max_total_area)
 
         if instl_ord == 'Devices':
             # calculate loading and projected area of device or sub-device
@@ -294,5 +291,24 @@ def install_port(device, sub_device,
     return port
 
 
+def get_max_load_area_foundations(foundation,
+                                  max_total_load=0.,
+                                  max_total_area=0.):
+        
+    # Calculate loading and projected area of foundations/anchors
+    max_moo_loading = 0
+    max_moo_area = 0
+    
+    for _, row in foundation.iterrows():
+        
+        load_u = row['dry mass [kg]'] / \
+                                (row['length [m]'] * row['width [m]'])
+        area_u = row['length [m]'] * row['width [m]']
 
+        max_moo_loading = max(max_moo_loading, load_u)
+        max_moo_area = max(max_moo_area, area_u)
 
+    max_total_load = max(max_total_load, max_moo_loading)
+    max_total_area = max(max_total_area, max_moo_area)
+        
+    return max_total_load, max_total_area
