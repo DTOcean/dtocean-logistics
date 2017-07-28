@@ -166,7 +166,7 @@ def waitingTime(log_phase, log_phase_id, metocean, om, sched_sol):
                       'day': int(rt[0:2]),
                       'hour': int(rt[11:13]),
                       'min': int(rt[14:16])}
-    nb_years = max(metocean['year [-]']) - min(metocean['year [-]'])
+    nb_years = max(metocean['year [-]']) - min(metocean['year [-]']) + 1
     all_wait_time = []
     for jour in range(len(sched_sol['journey'])):  # loop over the number of vessel journeys
         # isolate information from the vessel journey of interest
