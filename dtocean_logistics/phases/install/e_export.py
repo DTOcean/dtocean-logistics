@@ -37,11 +37,15 @@ See also: ...
 
 """
 
-from .classes import DefPhase, LogPhase
-from dtocean_logistics.ancillaries.dist import distance
-
 import logging
+
+from ...ancillaries.dist import distance
+from .classes import DefPhase, LogPhase
+from .shared import get_burial_equip
+
+# Start logging
 module_logger = logging.getLogger(__name__)
+
 
 def init_e_export_phase(log_op, vessels, equipments, landfall,
                         static_cable, cable_route, collection_point):
@@ -105,55 +109,8 @@ def init_e_export_phase(log_op, vessels, equipments, landfall,
         for a in range(len(trench_type)): 
             
             technique = trench_type[a]
+            burial_equip = get_burial_equip(technique)
             
-            if technique == 'ploughing':
-                burial_equip = 'plough'
-                
-            elif technique == 'jetting':
-                burial_equip = 'jetter'
-                
-            elif technique == 'cutting':
-                burial_equip = 'cutter'
-                
-                msg = ("Only simultaneous lay and burial strategy is supported"
-                       " by the tool. This is typically not compatible with "
-                       "the {} trenching technique. However, the {} trenching "
-                       "rates are used to compute the burial time.".format(
-                           technique))
-                module_logger.info(msg)
-                
-            elif technique == 'dredging':
-                
-                burial_equip = 'dredge'
-                
-                msg = ("Only simultaneous lay and burial strategy is supported"
-                       " by the tool. This is typically not compatible with "
-                       "the {} trenching technique. However, the {} trenching "
-                       "rates are used to compute the burial time.".format(
-                           technique))
-                module_logger.info(msg)
-                               
-            elif technique == 'no burial':
-                pass
-                
-            elif technique == 'no data':
-                burial_equip = 'plough'
-                
-                msg = ("Not enough data to compute trenching techniques. "
-                       "A plough is assumed.")
-
-                module_logger.warning(msg)
-
-            else:
-            
-                msg = ("Export cable trenching technique not valid. "
-                       "A plough is assumed.")
-                module_logger.warning(msg)
-                
-                burial_equip = 'plough'
-                
-                ## add plough here - 
-        
             # initialize strategy
             phase.op_ve[a] = DefPhase(1, 'Static Export Cable Installation Strategy: %s' % trench_type[a])
             
