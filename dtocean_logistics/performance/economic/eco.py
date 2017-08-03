@@ -28,7 +28,7 @@ def cost(module, log_phase, log_phase_id, other_rates):
                 dur_prep = sched['prep time']
                 nb_ves_type = len(log_phase.op_ve[seq].sol[ind_sol]['VEs'])
             else:
-                dur_sea_wait = sched['sea time'] # + sum(sched['waiting time'])
+                dur_sea_wait = sched['sea time'] + sum(sched['waiting time'])
                 dur_prep = sched['prep time']
                 nb_ves_type = len(log_phase.op_ve[seq].sol[ind_sol]['VEs'])
 
