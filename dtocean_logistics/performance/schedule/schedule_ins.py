@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
-
-This...
+@author: WavEC Offshore Renewables, Mathew Topper
+email: boris.teillant@wavec.org; paulo@wavec.org, dataonlygreater@gmail.com
 """
 
 import math
@@ -14,8 +12,10 @@ from copy import deepcopy
 from datetime import timedelta
 from operator import itemgetter
 from itertools import groupby
+from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
 
 from ...performance.schedule.install import (sched_dev,
                                              sched_e_export,
@@ -40,14 +40,345 @@ module_logger = logging.getLogger(__name__)
 
 class WaitingTime(object):
     
-    def __init__(self, metocean):
+    def __init__(self, metocean, min_window_years=3):
         
-        self.metocean = metocean
+        self.metocean = self._init_years(metocean, min_window_years)
         self._olc_ww = []
         
         return
     
-    def get_weather_window(self, olc):
+    @classmethod
+    def _init_years(cls, metocean, min_window_years):
+        
+        """Retain complete years in metocean data by searching for first and
+        last hour of each year. Ensure that min_window_years years of data
+        is available by looping if necessary.
+        """
+        
+        # Test for first and last hour of each year (assuming hour 0 and
+        # the last hour for the median time step)
+        median_step = metocean["hour [-]"].diff().median()
+        year_groups = metocean.groupby('year [-]')
+        
+        valid_years = []
+
+        for year, df in year_groups:
+            
+            if not ((df["month [-]"] == 1) &
+                    (df["day [-]"] == 1) &
+                    (df["hour [-]"] == 0)).any(): continue
+                    
+            if not ((df["month [-]"] == 12) &
+                    (df["day [-]"] == 31) &
+                    (df["hour [-]"] == (24 - median_step))).any(): continue
+                    
+            valid_years.append(year)
+            
+        if not valid_years:
+            
+            errStr = ("No complete years for weather window calculation were "
+                      "found in metocean data")
+            raise ValueError(errStr)
+            
+        missing_years = set(year_groups.groups.keys()) - set(valid_years)
+        
+        if missing_years:
+            
+            missing_year_strs = [str(year) for year in missing_years]
+            years_str = ", ".join(missing_year_strs)
+            
+            msgStr = ("Year(s) '{}' were incomplete and removed from weather "
+                      "window calculation").format(years_str)
+            module_logger.info(msgStr)
+        
+        # Check that the years are monotonic
+        valid_years_iter = iter(valid_years)
+        first_year = next(valid_years_iter)
+    
+        if not all(a == b for a, b in enumerate(valid_years_iter,
+                                                first_year + 1)):
+            
+            valid_year_strs = [str(year) for year in valid_years]
+            valid_str = ", ".join(valid_year_strs)
+            errStr = ("Valid years in metocean data are not monotonic. Found: "
+                      "{}").format(valid_str)
+            raise ValueError(errStr)
+                        
+        final_metocean = metocean[metocean["year [-]"].isin(valid_years)]
+        final_metocean = final_metocean.reset_index()
+        
+        n_years = len(valid_years)
+        
+        if n_years >= min_window_years: return final_metocean
+        
+        msgStr = ("Valid metocean data contains {} years which is less than "
+                  "the minimum {} required. Data will be manipulated to "
+                  "extend the duration").format(n_years,
+                                                min_window_years)
+        module_logger.info(msgStr)
+        
+        # Get the divisor and remainder for looping the years
+        n_repeats = min_window_years / n_years - 1
+        n_extra = min_window_years % n_years
+        initial_metocean = final_metocean.copy()
+        
+        # Add repeats
+        if n_repeats > 0:
+            msgStr = "Repeating valid metocean data {} time(s)".format(
+                                                                    n_repeats)
+            module_logger.info(msgStr)
+
+        for i in xrange(n_repeats):
+            
+            add_years = n_years * (i + 1)
+            new_metocean = initial_metocean.copy()
+            new_metocean["year [-]"] = new_metocean["year [-]"].apply(
+                                                    lambda x: x + add_years)
+            
+            final_metocean = pd.concat([final_metocean, new_metocean],
+                                       ignore_index=True)
+            
+            
+        if n_extra == 0:
+            assert len(final_metocean["year [-]"].unique()) == \
+                                                            min_window_years
+            return final_metocean
+            
+        # Add extra years
+        msgStr = "Copying {} year(s) from valid metocean data".format(n_extra)
+        module_logger.info(msgStr)
+        
+        add_years = n_years * (n_repeats + 1)
+        extra_years = valid_years[:n_extra]
+        
+        new_metocean = metocean[metocean["year [-]"].isin(extra_years)]
+        new_metocean["year [-]"] = new_metocean["year [-]"].apply(
+                                                    lambda x: x + add_years)
+        
+        final_metocean = pd.concat([final_metocean, new_metocean],
+                                   ignore_index=True)
+        
+        assert len(final_metocean["year [-]"].unique()) == min_window_years
+        
+        return final_metocean
+    
+    @classmethod
+    def _get_whole_windows(cls, weather_windows, start_date_met, sea_time):
+        
+        ind_ww_sd = indices(weather_windows['start_dt'],
+                                lambda x: x >= start_date_met)
+        ind_ww_dur = indices(weather_windows['duration'],
+                             lambda y: y >= sea_time)
+        ind_ww_all = set(ind_ww_sd).intersection(ind_ww_dur)
+        
+        return list(ind_ww_all)
+    
+    @classmethod
+    def _get_start_delay(cls, weather_windows, start_date_met, window_idx):
+        
+        delta_wt = weather_windows['start_dt'][window_idx] - start_date_met
+        start_delay = int(delta_wt.total_seconds()) / 3600
+        
+        if start_delay < 0:
+            errStr = "Start of window is before requested start date"
+            raise RuntimeError(errStr)
+            
+        return start_delay
+    
+    @classmethod
+    def _get_window_info(cls, weather_windows, start_date_met, idx_ww_sd):
+        
+        window_delays = []
+        window_durations = []
+        window_gaps = []
+        last_end = None
+
+        for idx in idx_ww_sd:
+            
+            delta_st = weather_windows['start_dt'][idx] - start_date_met
+            delay = int(delta_st.total_seconds()) / 3600
+            
+            duration = weather_windows['duration'][idx]
+                        
+            window_delays.append(delay)
+            window_durations.append(duration)
+
+            delta_et = weather_windows['end_dt'][idx] - start_date_met
+            end = int(delta_et.total_seconds()) / 3600
+            
+            if last_end is None:
+                last_end = end
+                continue
+                
+            gap = end - last_end
+            last_end = end
+
+            window_gaps.append(gap)
+            
+        return window_delays, window_durations, window_gaps
+    
+    @classmethod
+    def _get_combined_windows(cls, window_delays,
+                                   window_durations,
+                                   window_gaps,
+                                   sea_time,
+                                   idx_ww_sd):
+        
+        delays = []
+        wait_times = []
+        
+        for idx in xrange(len(idx_ww_sd)):
+                        
+            delay = window_delays[idx]
+            check_durations = window_durations[idx:]
+            check_gaps = window_gaps[idx:]
+            
+            cum_durations = np.cumsum(check_durations)
+            cum_gaps = np.cumsum(check_gaps)
+            
+            # Leave the loop if the sea time cant be completed
+            if not (cum_durations >= sea_time).any(): break
+        
+            last_idx = np.argmax(cum_durations >= sea_time)
+            
+            if cum_gaps.size > 0:
+                wait_time = cum_gaps[last_idx - 1]
+            else:
+                wait_time = 0.
+            
+            delays.append(delay)
+            wait_times.append(wait_time)
+            
+        return delays, wait_times
+    
+    def _whole_window_strategy(self, weather_windows,
+                                     start_date,
+                                     sea_time):
+        
+        start_delay = None
+        waiting_time = None
+        
+        # Get the years of metoncea data
+        years = self.metocean['year [-]'].unique()
+
+        start_delays = []
+        
+        # Attempt to find whole weather windows, starting in each year of the
+        # metocean data and then calculate the mean start delay
+        for year in years:
+            
+            # Set the year to match metocean data and avoid reaching the 29th
+            # of February in a 366 days year
+            if (not (year % 4 == 0 and year & 100 != 0) and
+                start_date.month == 2 and
+                start_date.day > 28):
+                
+                start_date_met = dt.datetime(year,
+                                             3,
+                                             1,
+                                             start_date.hour)
+                
+            else:
+                
+                start_date_met = dt.datetime(year,
+                                             start_date.month,
+                                             start_date.day,
+                                             start_date.hour)
+                
+            # Look for indexes of weather windows starting after the given
+            # start date
+            ind_ww_all = self._get_whole_windows(weather_windows,
+                                                 start_date_met,
+                                                 sea_time)
+                    
+            if not ind_ww_all:
+                
+                latest_window = max(weather_windows['start_dt'])
+                max_dur = max(weather_windows['duration'])
+                
+                date_format = lambda x: "{:%d-%b %H:%M}".format(x)
+                
+                logStr = ("No combined start dates and durations found "
+                          "for operation with start date '{}' and "
+                          "duration {} hours. Latest available window is "
+                          "'{}' and longest duration is {} hours").format(
+                                              date_format(start_date),
+                                              sea_time,
+                                              date_format(latest_window),
+                                              max_dur)
+                
+                module_logger.warning(logStr)
+                
+            else:
+                
+                # Find the index of the first suitable weather window
+                ind_ww_first = min(ind_ww_all)
+                
+                # Get the start delay
+                start_delay = self._get_start_delay(weather_windows,
+                                                    start_date_met,
+                                                    ind_ww_first)
+                start_delays.append(start_delay)
+                
+        if start_delays:
+            start_delay = np.array(start_delays).mean()
+            
+        return start_delay, waiting_time
+    
+    def _combined_window_strategy(self, weather_windows,
+                                        start_date,
+                                        sea_time):
+
+        # Get the first year of the metoncea data
+        first_year = self.metocean['year [-]'].unique()[0]
+        
+        # Set the year to match metocean data and avoid reaching the 29th
+        # of February in a 366 days year
+        if (not (first_year % 4 == 0 and first_year & 100 != 0) and
+            start_date.month == 2 and
+            start_date.day > 28):
+            
+            start_date_met = dt.datetime(first_year,
+                                         3,
+                                         1,
+                                         start_date.hour)
+            
+        else:
+            
+            start_date_met = dt.datetime(first_year,
+                                         start_date.month,
+                                         start_date.day,
+                                         start_date.hour)
+            
+        # Look for indexes of weather windows starting after the given
+        # start date
+        idx_ww_sd = indices(weather_windows['start_dt'],
+                            lambda x: x >= start_date_met)
+        
+        # Collect delay, duration and gaps between windows
+        (window_delays,
+         window_durations,
+         window_gaps) = self._get_window_info(weather_windows,
+                                              start_date_met,
+                                              idx_ww_sd)
+
+        # Run through the windows, searching for the combination with least
+        # waiting time
+        delays, wait_times = self._get_combined_windows(window_delays,
+                                                        window_durations,
+                                                        window_gaps,
+                                                        sea_time,
+                                                        idx_ww_sd)
+        
+        # If no cumulative windows were found return None
+        if not delays: return None, None
+        
+        # Get group of windows with minimum waiting time
+        min_wait_idx = np.argmin(wait_times)
+        
+        return delays[min_wait_idx], wait_times[min_wait_idx]
+
+    def get_weather_windows(self, olc):
         
         """This functions returns the starting times and the durations of all
         weather windows found in the met-ocean data for the given operational
@@ -62,9 +393,7 @@ class WaitingTime(object):
     
         # Operational limit conditions (consdiered static over the entire
         # duration of the marine operation)
-        time_step = self.metocean['hour [-]'].ix[2] - \
-                                        self.metocean['hour [-]'].ix[1]
-                                        
+        median_step = self.metocean["hour [-]"].diff().median()
             
         windowStr = "No weather windows were found for operational condition: "
         durationStr = ("Short durations (<8 hours) detected for operational "
@@ -108,7 +437,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_windows(Hs_bin, time_step)
+        windows = get_window_indexes(Hs_bin, median_step)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -123,7 +452,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_windows(Tp_bin, time_step)
+        windows = get_window_indexes(Tp_bin, median_step)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -138,7 +467,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_windows(Ws_bin, time_step)
+        windows = get_window_indexes(Ws_bin, median_step)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -153,7 +482,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_windows(Cs_bin, time_step)
+        windows = get_window_indexes(Cs_bin, median_step)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -176,7 +505,7 @@ class WaitingTime(object):
             return ww
     
         # Determine the starting index and the durations of the weather windows
-        windows = get_windows(WW_bin, time_step)
+        windows = get_window_indexes(WW_bin, median_step)
     
         st_y = []
         st_m = []
@@ -213,8 +542,8 @@ class WaitingTime(object):
         ww['duration'] = durations
         
         return ww
-    
-    def __call__(self, log_phase, log_phase_id, rt_dt, sched_sol):
+                
+    def __call__(self, log_phase, sched_sol, start_date):
         
         """
         Waiting time calculation based on requested time and weather window
@@ -225,9 +554,8 @@ class WaitingTime(object):
                      'maxWs',
                      'maxCs']
         
-        years = self.metocean['year [-]'].unique()
-        
-        all_wait_time = []
+        start_delays = []
+        wait_times = []
                 
         # loop over the number of vessel journeys
         for journey in sched_sol['journey'].itervalues():
@@ -314,125 +642,48 @@ class WaitingTime(object):
             # Calculate new weather windows
             if weather_wind is None:
                 
-                weather_wind = self.get_weather_window(olc)
+                weather_wind = self.get_weather_windows(olc)
                 
                 self._olc_ww.append({'olc': olc,
                                      'ww': weather_wind})
                     
             # stop_time = timeit.default_timer()  # TIME ASSESSMENT
     
-            wait_time = []
-
-            # Add onshore preparation time to expected starting date
-            st_exp_dt = rt_dt + dt.timedelta(
-                    hours=float(sched_sol['prep time']))
-            et_exp_dt = st_exp_dt + dt.timedelta(
-                    hours=float(sched_sol['sea time']))
-    
-            # Initilise the year to start looking for weather window in the
-            # metocean data
-    
-            # Loop over the nb of years of metocean data
-            for year in years:  
+            # Start looking for whole weather windows in the metocean data
+            (start_delay,
+             wait_time) = self._whole_window_strategy(weather_wind,
+                                                      start_date,
+                                                      sched_sol['sea time'])
+            
+            # If a whole window can not be found look for cumulative windows
+            if start_delay is None:
                 
-                # Starting time in this year of the metocean data
-                # Avoiding reaching the 29th of February in a 365 days year
-                if (not (year % 4 == 0 and year & 100 != 0) and
-                    st_exp_dt.month == 2 and
-                    st_exp_dt.day > 28):
-                    
-                    st_exp_dt = st_exp_dt.replace(month=3)
-                    st_exp_dt = st_exp_dt.replace(day=1)
-                    st_exp_met_dt = dt.datetime(year,
-                                                st_exp_dt.month,
-                                                st_exp_dt.day,
-                                                st_exp_dt.hour)
-                    
-                else:
-                    
-                    st_exp_met_dt = dt.datetime(year,
-                                                st_exp_dt.month,
-                                                st_exp_dt.day,
-                                                st_exp_dt.hour)
+                (start_delay,
+                 wait_time) = self._combined_window_strategy(
+                                                         weather_wind,
+                                                         start_date,
+                                                         sched_sol['sea time'])
                 
-                if (not (year % 4 == 0 and year & 100 !=0) and
-                    et_exp_dt.month == 2 and
-                    et_exp_dt.day > 28):
-                    
-                    et_exp_dt = et_exp_dt.replace(month=3)
-                    et_exp_dt = et_exp_dt.replace(day=1)
-                    et_exp_met_dt = dt.datetime(year,
-                                                et_exp_dt.month,
-                                                et_exp_dt.day,
-                                                et_exp_dt.hour)
-                    
-                else:
-                    
-                    et_exp_met_dt = dt.datetime(year,
-                                                et_exp_dt.month,
-                                                et_exp_dt.day,
-                                                et_exp_dt.hour)
-                    
-                # look for indexes of weather windows finishing before the
-                # expected ending time
-                ind_ww_ed = indices(weather_wind['end_dt'],
-                                    lambda x: x >= et_exp_met_dt)
-                ind_ww_dur = indices(weather_wind['duration'],
-                                     lambda y: y >= sched_sol['sea time'])
-                ind_ww_all = set(ind_ww_ed).intersection(ind_ww_dur)
+            if start_delay is not None:
                 
-                if not ind_ww_all:
-                    
-                    latest_window = max(weather_wind['end_dt'])
-                    max_dur = max(weather_wind['duration'])
-                    
-                    date_format = lambda x: "{:%d-%b %H:%M}".format(x)
-                    
-                    logStr = ("No combined start dates and durations found "
-                              "for operation with start date '{}' and "
-                              "duration {} hours. Latest available window is "
-                              "'{}' and longest duration is {} hours").format(
-                                                  date_format(et_exp_met_dt),
-                                                  sched_sol['sea time'],
-                                                  date_format(latest_window),
-                                                  max_dur)
-                    
-                    module_logger.warning(logStr)
-    
-                if ind_ww_all:
-                    
-                    # Find the index of the first suitable weather window
-                    ind_ww_first = min(ind_ww_all)
-                    
-                    # Calculate the waiting time
-                    delta_wt = weather_wind['start_dt'][ind_ww_first] - \
-                                                                st_exp_met_dt
-                    wt = int(delta_wt.total_seconds() // (60 * 60))
-                    if wt < 0: wt = 0
-                    
-                    wait_time.append(wt)
-                        
-            if wait_time:
+                start_delays.append(start_delay)
                 
-                # calculate average waiting time
-                mean_wait_time = sum(wait_time) / float(len(wait_time))
-                all_wait_time.append(mean_wait_time)
-                
-                if mean_wait_time > 500:
-                    module_logger.warning("Long waiting time found in phase "
-                                          "{}: {}".format(
+                if start_delay > 720:
+                    module_logger.warning("Long start delay found in phase "
+                                          "{}: {} hours".format(
                                                       log_phase.description,
-                                                      mean_wait_time))
+                                                      start_delay))
                 
             else:
     
-                EXIT_FLAG = 'NoWWindows'
-                return [], [], EXIT_FLAG
+                return [], 'NoWWindows'
+            
+            if wait_time is not None: wait_times.append(wait_time)
     
-        journey['wait_dur'] = all_wait_time
-        EXIT_FLAG = 'WeatherWindowsFound'
+        journey['start_delay'] = start_delays
+        journey['wait_dur'] = wait_times
         
-        return journey, st_exp_dt, EXIT_FLAG
+        return journey, 'WeatherWindowsFound'
 
 
 def sched(x,
@@ -516,11 +767,14 @@ def sched(x,
             rt_dt, end_dt_last = get_start_end(x,
                                                install,
                                                device)
+            
+            # Add onshore preparation time to expected starting date
+            st_exp_dt = rt_dt + dt.timedelta(
+                                        hours=float(sched_sol['prep time']))
 
-            journey, st_exp_dt, WWINDOW_FLAG = waiting_time(log_phase,
-                                                            log_phase_id,
-                                                            rt_dt,
-                                                            sched_sol)
+            journey, WWINDOW_FLAG = waiting_time(log_phase,
+                                                 sched_sol,
+                                                 st_exp_dt)
 
             # stop_time1 = timeit.default_timer()  # TIME ASSESSMENT   
 
@@ -528,28 +782,23 @@ def sched(x,
             if WWINDOW_FLAG == 'NoWWindows': continue
 
             if not sched_sol['waiting time']:
-
                 sched_sol['waiting time'] = journey['wait_dur']
-
             else:
-
-                sched_sol['waiting time'] = \
-                    sched_sol['waiting time'] + journey['wait_dur']
+                sched_sol['waiting time'] += journey['wait_dur']
             
-#            sched_sol['weather windows'] = weather_wind
-
-            sched_sol['total time'] = \
-                            sched_sol['total time'] + sched_sol['waiting time']
-#            sched_sol['transit time'] = sched_sol['total time'] - \
-#                            sched_sol['waiting time'] - sched_sol['prep time']
-
-            departure_time = st_exp_dt + timedelta(
-                                        hours=sum(sched_sol['waiting time']))
-            end_time = departure_time + timedelta(hours=sched_sol['sea time'])
+            # Update total time
+            sched_sol['total time'] += journey['start_delay'] + \
+                                                    sched_sol['waiting time']
+            
+            departure_dt = st_exp_dt + \
+                                timedelta(hours=sum(journey['start_delay']))
+            end_dt = departure_dt + \
+                            timedelta(hours=sched_sol['sea time']) + \
+                                timedelta(hours=sum(sched_sol['waiting time']))
 
             sched_sol['weather windows start_dt'] = st_exp_dt
-            sched_sol['weather windows depart_dt'] = departure_time
-            sched_sol['weather windows end_dt'] = end_time
+            sched_sol['weather windows depart_dt'] = departure_dt
+            sched_sol['weather windows end_dt'] = end_dt
             
             old_sol_item = deepcopy(log_phase.op_ve[seq].sol[ind_sol])
             old_sol_item['schedule'] = sched_sol
@@ -825,7 +1074,7 @@ def get_start_end(x,
         end_dt_last = install['end_dt']
 
         if x - 1 in install['plan']:
-
+            
             for y in range(len(install['plan'][x - 1])):
 
                 last_log_id_outcome = install['plan'][x - 1][y]
@@ -872,12 +1121,15 @@ def get_start_end(x,
     return rt_dt, end_dt_last
 
 
-def get_windows(WW_bin, time_step):
+def get_window_indexes(WW_bin, time_step):
+    
+    """Return starting index and duration of window as keys and values of
+    an ordered dictionary"""
         
     WW_authorized = indices(WW_bin, lambda x: x == 1)
     window_groups = get_groups(WW_authorized)
 
-    windows = {}
+    windows = OrderedDict()
     
     for group in window_groups:
         
