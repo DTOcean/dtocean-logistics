@@ -22,9 +22,9 @@ def cost(module, log_phase, log_phase_id, other_rates):
             sched = log_phase.op_ve[seq].sol[ind_sol]['schedule']
             if log_phase_id == 'LpM6' or log_phase_id == 'LpM7':
                 dur_sea_wait = sched['sea time_retrieve'] + \
-                               sched['sea time_replace'] # + \
-#                               sum(sched['waiting time_retrieve']) + \
-#                               sum(sched['waiting time_replace'])
+                               sched['sea time_replace'] + \
+                               sum(sched['waiting time_retrieve']) + \
+                               sum(sched['waiting time_replace'])
                 dur_prep = sched['prep time']
                 nb_ves_type = len(log_phase.op_ve[seq].sol[ind_sol]['VEs'])
             else:
