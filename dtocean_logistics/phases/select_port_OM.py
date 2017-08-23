@@ -87,12 +87,12 @@ The OM_port function selects the port used by OM logistic phases
      dictionnary containing the results of the port selection
     """
 
-    path_dict = get_install_paths()
-    include_dir = path_dict["logistics_include"]
-    if point_path is None:
-        point_path = os.path.join(include_dir, "Point_DTOcean_0.csv")
-    if graph_path is None:
-        graph_path = os.path.join(include_dir, "graph_sea_european_sea.p")
+#    path_dict = get_install_paths()
+#    include_dir = path_dict["logistics_include"]
+#    if point_path is None:
+#        point_path = os.path.join(include_dir, "Point_DTOcean_0.csv")
+#    if graph_path is None:
+#        graph_path = os.path.join(include_dir, "graph_sea_european_sea.p")
 
     # # TO BE CHANGED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # if point_path is None:
@@ -209,8 +209,8 @@ The OM_port function selects the port used by OM logistic phases
         if math.isnan(port_coords_x):
             continue
 
-        dist_to_port_i = transit_algorithm(site_coords, port_coords, point_path, graph_path)
-        # dist_to_port_i = distance(site_coords, port_coords)  # simplification just for TESTING!!!!!!!!!!!!!!!!!!!!!!!!!
+#        dist_to_port_i = transit_algorithm(site_coords, port_coords, point_path, graph_path)
+        dist_to_port_i = distance(site_coords, port_coords)  # simplification just for TESTING!!!!!!!!!!!!!!!!!!!!!!!!!
 
         dist_to_clost_port_vec.append(dist_to_port_i)
         min_dist_to_clst_port = min(dist_to_clost_port_vec)
