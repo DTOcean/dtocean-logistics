@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from dtocean_logistics.ancillaries.find import indices
-from dtocean_logistics.performance.schedule.schedule_ins import (
+from dtocean_logistics.performance.schedule.schedule_shared import (
                                                         WaitingTime,
                                                         get_window_indexes,
                                                         get_groups)
