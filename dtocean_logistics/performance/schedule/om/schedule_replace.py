@@ -71,6 +71,7 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
     op_olc_sea = []
     op_id_demob = []
     op_dur_demob = []
+    op_dur_transit = []
     op_id_prep_jour = {0:[]}
     op_dur_prep_jour = {0:[]}
     op_id_sea_jour = {0:[]}
@@ -281,7 +282,8 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
 #                                        water_depth
 #                                    UTM_dev_z = layout['zone [-]'].ix[0] 
                         water_depth_dev = om['Bathymetry [m]'].ix[0]
-                        jacking_time = water_depth_dev/ve_combi[0][2].ix['JackUp speed down [m/min]']*60 # [8hour]
+                        jacking_time = water_depth_dev / ve_combi[0][2].ix['JackUp speed down [m/min]'] / 60
+                        op_dur_transit.append(nb_el_journey[jour]*jacking_time)
                         op_dur_sea.append(nb_el_journey[jour]*jacking_time)
                         olc_Hs = ve_combi[0][2].ix['OLC: Jacking maxHs [m]']
                         olc_Tp = ve_combi[0][2].ix['OLC: Jacking maxTp [s]']
@@ -298,6 +300,7 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
                         journey[jour]['sea_olc'].append(olc_jack)
                     else: 
                         op_dur_sea.append(nb_el_journey[jour]*log_op_sea.time_value)
+                        op_dur_transit.append(nb_el_journey[jour]*log_op_sea.time_value)
                         olc_Hs = ve_combi[0][2].ix['OLC: Transit maxHs [m]']
                         olc_Tp = ve_combi[0][2].ix['OLC: Transit maxTp [s]']
                         olc_Ws = ve_combi[0][2].ix['OLC: Transit maxWs [m/s]']
@@ -356,6 +359,7 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
                         port_2_site_time = (port_2_site_dist + site_2_el_dist)/ves_slow
                         # append transit time from port to site
                         op_dur_sea.append(port_2_site_time)
+                        op_dur_transit.append(port_2_site_time)
                         op_id_sea.append(log_op_sea.description)
                         op_id_sea_jour[jour].append(log_op_sea.description)
                         op_dur_sea_jour[jour].append(port_2_site_time)
@@ -402,6 +406,7 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
                         port_2_site_time = (port_2_site_dist + site_2_el_dist)/ves_slow
                         # append transit time from port to site
                         op_dur_sea.append(port_2_site_time)
+                        op_dur_transit.append(port_2_site_time)
                         op_id_sea.append(log_op_sea.description)
                         op_id_sea_jour[jour].append(log_op_sea.description)
                         op_dur_sea_jour[jour].append(port_2_site_time)
@@ -455,6 +460,7 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
                     site_2_site_time = dist_tot/ves_slow
                     # append transit time from site to site
                     op_dur_sea.append(site_2_site_time)
+                    op_dur_transit.append(site_2_site_time)
                     op_id_sea.append(log_op_sea.description)
                     op_id_sea_jour[jour].append(log_op_sea.description)
                     op_dur_sea_jour[jour].append(site_2_site_time)
@@ -601,25 +607,39 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
 
     # replace 'NaN' from the time duration values retrieved with '0'
     op_dur_prep_clean = op_dur_prep
+    
     for ind_prep in range(len(op_dur_prep)):
         if math.isnan(op_dur_prep[ind_prep]):
             op_dur_prep_clean[ind_prep] = 0
+            
     op_dur_sea_clean = op_dur_sea
+    
     for ind_sea in range(len(op_dur_sea)):
         if math.isnan(op_dur_sea[ind_sea]):
             op_dur_sea_clean[ind_sea] = 0
+            
     op_dur_demob_clean = op_dur_demob
+    
     for ind_demob in range(len(op_dur_demob)):
         if math.isnan(op_dur_demob[ind_demob]):
             op_dur_demob_clean[ind_demob] = 0
+            
+    op_dur_transit_clean = op_dur_transit
+                
+    for idx in range(len(op_dur_transit)):
+        if math.isnan(op_dur_transit[idx]):
+            op_dur_transit_clean[idx] = 0
+            
     # Calculate cumulated times
     sched_sol['prep time_replace'] = sum(op_dur_prep)
+    sched_sol['transit time_replace'] = sum(op_dur_transit_clean)
     sched_sol['sea time_replace'] = sum(op_dur_sea)
     sched_sol['total time_replace'] = float(sched_sol['prep time_replace'] + sched_sol['sea time_replace'] + op_dur_demob_clean)
     sched_sol['RtP'] = 'replace'
     
-    sched_sol['sea time'] = sched_sol['sea time_retrieve'] + sched_sol['sea time_replace']
     sched_sol['prep time'] = sched_sol['prep time_retrieve'] + sched_sol['prep time_replace']
+    sched_sol['transit time'] = sched_sol['transit time_retrieve'] + sched_sol['transit time_replace']
+    sched_sol['sea time'] = sched_sol['sea time_retrieve'] + sched_sol['sea time_replace']
     sched_sol['total time'] = float(sched_sol['total time_retrieve'] + sched_sol['total time_replace'])
 
     return sched_sol
