@@ -71,6 +71,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
     op_olc_sea = []
     op_id_demob = []
     op_dur_demob = []
+    op_dur_transit = []
     op_id_prep_jour = {0: []}
     op_dur_prep_jour = {0: []}
     op_id_sea_jour = {0: []}
@@ -356,7 +357,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
 #                                        water_depth
 #                                    UTM_dev_z = layout['zone [-]'].ix[0] 
                         water_depth_dev = om['Bathymetry [m]'].ix[0]
-                        jacking_time = water_depth_dev/ve_combi[0][2].ix['JackUp speed down [m/min]']*60.0 # [8hour]
+                        jacking_time = water_depth_dev / ve_combi[0][2].ix['JackUp speed down [m/min]'] / 60.0
                         op_dur_sea.append(nb_el_journey[jour]*jacking_time)
                         olc_Hs = ve_combi[0][2].ix['OLC: Jacking maxHs [m]']
                         olc_Tp = ve_combi[0][2].ix['OLC: Jacking maxTp [s]']
@@ -367,6 +368,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
                         op_id_sea.append(log_op_sea.description)
                         op_id_sea_jour[jour].append(log_op_sea.description)
                         op_dur_sea_jour[jour].append(nb_el_journey[jour]*jacking_time)
+                        op_dur_transit.append(nb_el_journey[jour]*jacking_time)
                         op_olc_jour[jour].append(olc_jack)
                         journey[jour]['sea_id'].append(log_op_sea.description)
                         journey[jour]['sea_dur'].append(nb_el_journey[jour]*jacking_time)
@@ -383,6 +385,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
                         op_id_sea.append(log_op_sea.description)
                         op_id_sea_jour[jour].append(log_op_sea.description)
                         op_dur_sea_jour[jour].append(nb_el_journey[jour]*log_op_sea.time_value)
+                        op_dur_transit.append(nb_el_journey[jour]*log_op_sea.time_value)
                         op_olc_jour[jour].append(olc_trans)
                         journey[jour]['sea_id'].append(log_op_sea.description)
                         journey[jour]['sea_dur'].append(nb_el_journey[jour]*log_op_sea.time_value)
@@ -441,6 +444,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
 #                                op_olc_jour[jour].append(olc_trans)
 #                                
 #                                journey[jour]['sea_olc'].append(olc_trans)
+
                     olc = np.min(olc,0).tolist()
                     op_olc_sea.append(olc)
                     op_olc_jour[jour].append(olc)
@@ -451,6 +455,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
                     op_id_sea.append(log_op_sea.description)
                     op_id_sea_jour[jour].append(log_op_sea.description)
                     op_dur_sea_jour[jour].append(port_2_site_time)
+                    op_dur_transit.append(port_2_site_time)
                     journey[jour]['sea_id'].append(log_op_sea.description)
                     journey[jour]['sea_dur'].append(port_2_site_time)
                     journey[jour]['sea_olc'].append(olc)
@@ -491,7 +496,8 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
                                 olc_trans = [olc_Hs, olc_Tp, olc_Ws, olc_Cs]
                                 olc_trans = nan2zero(olc_trans)
                                 olc.append(olc_trans)
-                    olc = np.min(olc,0).tolist()
+                                
+                    if olc: olc = np.min(olc,0).tolist()
                     op_olc_sea.append(olc)
                     op_olc_jour[jour].append(olc)
                     ves_slow = 3.6*min(ves_speed) # [km/h]
@@ -501,6 +507,7 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
                     op_id_sea.append(log_op_sea.description)
                     op_id_sea_jour[jour].append(log_op_sea.description)
                     op_dur_sea_jour[jour].append(site_2_site_time)
+                    op_dur_transit.append(site_2_site_time)
                     journey[jour]['sea_id'].append(log_op_sea.description)
                     journey[jour]['sea_dur'].append(site_2_site_time)
                     journey[jour]['sea_olc'].append(olc)
@@ -582,21 +589,38 @@ def sched_site(log_phase_id, seq, ind_sol, log_phase, site, layout, entry_point,
 
     # replace 'NaN' from the time duration values retrieved with '0'
     op_dur_prep_clean = op_dur_prep
+    
     for ind_prep in range(len(op_dur_prep)):
         if math.isnan(op_dur_prep[ind_prep]):
             op_dur_prep_clean[ind_prep] = 0
+            
     op_dur_sea_clean = op_dur_sea
+    
     for ind_sea in range(len(op_dur_sea)):
         if math.isnan(op_dur_sea[ind_sea]):
             op_dur_sea_clean[ind_sea] = 0
+            
     op_dur_demob_clean = op_dur_demob
+    
     for ind_demob in range(len(op_dur_demob)):
         if math.isnan(op_dur_demob[ind_demob]):
             op_dur_demob_clean[ind_demob] = 0
+            
+    op_dur_transit_clean = op_dur_transit
+                
+    for idx in range(len(op_dur_transit)):
+        if math.isnan(op_dur_transit[idx]):
+            op_dur_transit_clean[idx] = 0
+    
     # Calculate cumulated times
     sched_sol['prep time'] = sum(op_dur_prep)
     sched_sol['sea time'] = sum(op_dur_sea)
-    sched_sol['total time'] = sched_sol['prep time'] + sched_sol['sea time'] + op_dur_demob_clean
+    sched_sol['transit time'] = sum(op_dur_transit_clean)
+    
+    sched_sol['total time'] = list(sched_sol['prep time'] +
+                                   sched_sol['sea time'] +
+                                   op_dur_demob_clean)
+    
     return sched_sol
             
 
