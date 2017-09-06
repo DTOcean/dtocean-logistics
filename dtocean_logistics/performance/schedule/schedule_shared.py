@@ -388,10 +388,7 @@ class WaitingTime(object):
         """
     
         # Initialisation
-        ww = {'start': 0,
-              'duration': 0,
-              'start_dt': 0,
-              'end_dt': 0}
+        ww = {}
     
         # Operational limit conditions (consdiered static over the entire
         # duration of the marine operation)
@@ -645,9 +642,11 @@ class WaitingTime(object):
             if weather_wind is None:
                 
                 weather_wind = self.get_weather_windows(olc)
-                
                 self._olc_ww.append({'olc': olc,
                                      'ww': weather_wind})
+            
+            # OLC conditions allow no weather windows
+            if not weather_wind: return [], 'NoWWindows'
                     
             # stop_time = timeit.default_timer()  # TIME ASSESSMENT
     
