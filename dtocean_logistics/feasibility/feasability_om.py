@@ -578,29 +578,9 @@ def feas_om(log_phase, log_phase_id, om, device, sub_device, collection_point,
             if ((dyn_df['upstream ei type [-]'] == 'wet-mate').any() or
                 (dyn_df['downstream ei type [-]'] == 'wet-mate').any()):
                 
-                connector_ids = None
-                
-                dyn_wet_df = dyn_df[
-                                dyn_df['upstream ei type [-]'] == 'wet-mate']
-                
-                if not dyn_wet_df.empty:
-                    connector_ids = dyn_wet_df['upstream ei id [-]'].values
-                
-                dyn_wet_df = dyn_df[
-                                dyn_df['downstream ei type [-]'] == 'wet-mate']
-                
-                if not dyn_wet_df.empty:
-                    connector_ids = dyn_wet_df['downstream ei id [-]'].values
-                                                
-                if connector_ids is None:
-                    
-                    errStr = "Something is buggered"
-                    raise RuntimeError(errStr)
-
-                connector_df = connectors.loc[connector_ids]
-
                 rov_type = 'Workclass'
-                demate_force = connector_df['demating force [N]'].fillna(0)
+                demate_force = get_wet_mate_demating_force(dyn_df,
+                                                           connectors)
                
             # Check for dry-mate/splice upstream electrical interfaces 
             if (dyn_df['upstream ei type [-]'] == 'dry-mate').any() or (dyn_df['upstream ei type [-]'] == 'splice').any():                
@@ -781,3 +761,31 @@ def feas_om(log_phase, log_phase_id, om, device, sub_device, collection_point,
                 'deck loading': deck_loading}
 
     return feas_e, feas_v, feas_m_pv, feas_m_pe, feas_m_ve, deck_req
+
+
+def get_wet_mate_demating_force(dyn_df, connectors):
+    
+    connector_ids = None
+                
+    dyn_wet_df = dyn_df[
+                    dyn_df['upstream ei type [-]'] == 'wet-mate']
+    
+    if not dyn_wet_df.empty:
+        connector_ids = dyn_wet_df['upstream ei id [-]'].values
+    
+    dyn_wet_df = dyn_df[
+                    dyn_df['downstream ei type [-]'] == 'wet-mate']
+    
+    if not dyn_wet_df.empty:
+        connector_ids = dyn_wet_df['downstream ei id [-]'].values
+                                    
+    if connector_ids is None:
+        
+        errStr = "Something is buggered"
+        raise RuntimeError(errStr)
+
+    connector_df = connectors.loc[connector_ids]
+
+    demate_force = connector_df['demating force [N]'].fillna(0)
+    
+    return demate_force
