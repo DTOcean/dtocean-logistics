@@ -571,17 +571,35 @@ def feas_om(log_phase, log_phase_id, om, device, sub_device, collection_point,
  
         # inputs needed for maintenance action 'RtP6' - Replacement of dynamic cables       
         if (element_type == 'dynamic cable').all():      # elements should all be dynamic cables 
+            
             dyn_df = dynamic_cable.ix[element_id] 
-            # Check for wet-mate electrical interfaces  
-            if (dyn_df['upstream ei type [-]'] == 'wet-mate').any() or (dyn_df['downstream ei type [-]'] == 'wet-mate').any():
-                dyn_wet_df = dyn_df[dyn_df['upstream ei type [-]'] == 'wet-mate']
-                dyn_wet_connector_id = dyn_wet_df['upstream ei id [-]']                
-                dyn_wet_df = dyn_df[dyn_df['downstream ei type [-]'] == 'wet-mate'] 
-                dyn_wet_connector_id.append(dyn_wet_df['downstream ei id [-]'])
-                
-                connector_df = connectors.ix[dyn_wet_connector_id]
 
-                rov_type = 'Workclass'                
+            # Check for wet-mate electrical interfaces  
+            if ((dyn_df['upstream ei type [-]'] == 'wet-mate').any() or
+                (dyn_df['downstream ei type [-]'] == 'wet-mate').any()):
+                
+                connector_ids = None
+                
+                dyn_wet_df = dyn_df[
+                                dyn_df['upstream ei type [-]'] == 'wet-mate']
+                
+                if not dyn_wet_df.empty:
+                    connector_ids = dyn_wet_df['upstream ei id [-]'].values
+                
+                dyn_wet_df = dyn_df[
+                                dyn_df['downstream ei type [-]'] == 'wet-mate']
+                
+                if not dyn_wet_df.empty:
+                    connector_ids = dyn_wet_df['downstream ei id [-]'].values
+                                                
+                if connector_ids is None:
+                    
+                    errStr = "Something is buggered"
+                    raise RuntimeError(errStr)
+
+                connector_df = connectors.loc[connector_ids]
+
+                rov_type = 'Workclass'
                 demate_force = connector_df['demating force [N]'].fillna(0)
                
             # Check for dry-mate/splice upstream electrical interfaces 
@@ -691,6 +709,13 @@ def feas_om(log_phase, log_phase_id, om, device, sub_device, collection_point,
                                 weight.append( max(sub_device_mass))
                                 area.append( max(sub_device_length*sub_device_width))
                                 loading.append( max( (sub_device_mass/(sub_device_length*sub_device_width)).replace([np.inf, -np.inf], np.nan) ) )  
+
+        # Catch missing rov_type
+        if 'rov_type' not in vars():
+            
+            errStr = ("ROV type is undefined for some reason. First element "
+                      "type was {}").format(element_type.loc[0])
+            raise RuntimeError(errStr)
 
         # Feasibility functions
         drum_cap = max(lenght_SP)
