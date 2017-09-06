@@ -289,6 +289,135 @@ def test_WaitingTime_combined_window_strategy_short(metocean):
     assert waiting_time == 0
 
 
+def test_WaitingTime_call(mocker, metocean):
+    
+    test = WaitingTime(metocean)
+    
+    log_phase = mocker.Mock()
+    log_phase.description = "Mocked phase"
+    
+    journey = {'prep_dur': [48, 48],
+               'prep_id': [u'Mobilisation', u'Vessel preparation & loading'],
+               'sea_dur': [35.52257567817756,
+                           6.0,
+                           2,
+                           4,
+                           0.0,
+                           35.52257567817756],
+               'sea_id': [u'Transportation from port to site',
+                          u'Vessel Positioning',
+                          u'Access to the element',
+                          u'Inspection or Maintenance Operations',
+                          u'Transportation from site to site',
+                          u'Transportation from site to port'],
+               'sea_olc': [[2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0, 0, 0],
+                           [4, 6, 15, 2],
+                           [4, 6, 15, 2],
+                           [2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0.0, 0.0, 0.0]],
+               'wait_dur': []}
+    
+    sched_sol = {"journey": {0: journey}}
+    start_date = dt.datetime(2000, 1, 1)
+    sea_time = 100
+    
+    journey, exit_flag = test(log_phase,
+                              sched_sol,
+                              start_date,
+                              sea_time)
+    
+    assert exit_flag == "WeatherWindowsFound"
+    assert 'start_delay' in journey
+
+
+def test_WaitingTime_call_no_strategy(mocker, metocean):
+    
+    test = WaitingTime(metocean)
+    
+    log_phase = mocker.Mock()
+    log_phase.description = "Mocked phase"
+    
+    # Use conditions where no strategy can be found although there are
+    # weather windows for the OLC conditions.
+    journey = {'prep_dur': [48, 48],
+               'prep_id': [u'Mobilisation', u'Vessel preparation & loading'],
+               'sea_dur': [35.52257567817756,
+                           6.0,
+                           2,
+                           4,
+                           0.0,
+                           35.52257567817756],
+               'sea_id': [u'Transportation from port to site',
+                          u'Vessel Positioning',
+                          u'Access to the element',
+                          u'Inspection or Maintenance Operations',
+                          u'Transportation from site to site',
+                          u'Transportation from site to port'],
+               'sea_olc': [[0.1, 0.0, 0.0, 0.0],
+                           [2.5, 0, 0, 0],
+                           [4, 6, 15, 2],
+                           [4, 6, 15, 2],
+                           [2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0.0, 0.0, 0.0]],
+               'wait_dur': []}
+    
+    sched_sol = {"journey": {0: journey}}
+    start_date = dt.datetime(2000, 1, 1)
+    sea_time = 500
+    
+    journey, exit_flag = test(log_phase,
+                              sched_sol,
+                              start_date,
+                              sea_time)
+    
+    assert exit_flag == 'NoWWindows'
+    assert not journey
+
+
+def test_WaitingTime_call_no_windows(mocker, metocean):
+    
+    test = WaitingTime(metocean)
+    
+    log_phase = mocker.Mock()
+    log_phase.description = "Mocked phase"
+    
+    # Use very small OLC conditions for which no windows are in metocean
+    journey = {'prep_dur': [48, 48],
+               'prep_id': [u'Mobilisation', u'Vessel preparation & loading'],
+               'sea_dur': [35.52257567817756,
+                           6.0,
+                           2,
+                           4,
+                           0.0,
+                           35.52257567817756],
+               'sea_id': [u'Transportation from port to site',
+                          u'Vessel Positioning',
+                          u'Access to the element',
+                          u'Inspection or Maintenance Operations',
+                          u'Transportation from site to site',
+                          u'Transportation from site to port'],
+               'sea_olc': [[0.01, 0.0, 0.0, 0.0],
+                           [2.5, 0, 0, 0],
+                           [4, 6, 15, 2],
+                           [4, 6, 15, 2],
+                           [2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0.0, 0.0, 0.0]],
+               'wait_dur': []}
+    
+    sched_sol = {"journey": {0: journey}}
+    start_date = dt.datetime(2000, 1, 1)
+    sea_time = 1
+    
+    journey, exit_flag = test(log_phase,
+                              sched_sol,
+                              start_date,
+                              sea_time)
+        
+    assert exit_flag == 'NoWWindows'
+    assert not journey
+
+
 def test_get_window_indexes():
     
     wdx = np.array([1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,
