@@ -94,7 +94,6 @@ setup(name='dtocean-logistics',
       package_data={'dtocean_logistics': ['config/*.ini']},
       zip_safe=False,
       tests_require=['pytest',
-                     'pytest-cov',
                      'pytest-mock'],
       cmdclass = {'test': PyTest,
                   'cleanpyc': CleanPyc
