@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   not find a weather window.
 - Fixed bug when only using one year of weather data.
 - Fixed bug with jacking time being overestimated.
+- Fixed issue identifying the correct connector IDs for dynamics cables
+  maintenance feasibility check.
+- Catch case where OLC conditions generate no weather windows in WaitingTime
+  class.
 
 ## [1.0.0] - 2017-01-05
 
