@@ -13,8 +13,6 @@ and their characterization was mostly limited to the id and description. This
 will be further expanded in the following version.
 """
 
-import pandas as pd
-
 class LogOp(object):
 
     def __init__(self, id, description, time_value, time_function, time_other, olc):
@@ -50,23 +48,30 @@ def logOp_init(op_db):
      dictionnary containing all classes defining the logistic operations
     """
     
-    # print op_db
-
     logOp = {}
+        
+    name_map = {'id [-]': "id",
+                'Logitic operation [-]': "op",
+                'Time: value [h]': "val",
+                'Time: function [-]': "func",
+                'Time: other [-]': "other",
+                'OLC: Hs [m]': "hs",
+                'OLC: Tp [s]': "tp",
+                'OLC: Ws [m/s]': "ws",
+                'OLC: Cs [m/s]': "cs"}
+    
+    new_op_db = op_db.rename(columns=name_map)
 
     # Create a dictionary containing all listed operations
-    for op_nr in range(len(op_db)):
+    for row in new_op_db.itertuples():
+        
+        olcs = [row.hs, row.tp, row.ws, row.cs]
 
-        logOp[op_db.index[op_nr]] = LogOp(op_db.ix[op_nr]['id [-]'],
-                                          op_db.ix[op_nr]['Logitic operation [-]'],
-                                          op_db.ix[op_nr]['Time: value [h]'],
-                                          op_db.ix[op_nr]['Time: function [-]'],
-                                          op_db.ix[op_nr]['Time: other [-]'],
-                                          [op_db.ix[op_nr]['OLC: Hs [m]'],
-                                           op_db.ix[op_nr]['OLC: Tp [s]'],
-                                           op_db.ix[op_nr]['OLC: Ws [m/s]'],
-                                           op_db.ix[op_nr]['OLC: Cs [m/s]']
-                                           ]
-                                           )
+        logOp[row.Index] = LogOp(row.id,
+                                 row.op,
+                                 row.val,
+                                 row.func,
+                                 row.other,
+                                 olcs)
 
     return logOp
