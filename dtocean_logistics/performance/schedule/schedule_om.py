@@ -29,9 +29,7 @@ def sched_om(log_phase,
              layout,
              om,
              optimise_delay=False):
-    
-    print 'Dist_port [km]', om['Dist_port [km]']
-    
+        
     # Check the phase ID
     allowed_phases = ['LpM1',
                       'LpM2',
@@ -117,9 +115,7 @@ def sched_om(log_phase,
                 
                 st_exp_dt = rt_dt + dt.timedelta(
                                         hours=float(sched_sol['prep time']))
-                
-                print 'sea time', sched_sol['sea time']
-                
+                                
                 journey, WWINDOW_FLAG = waiting_time(log_phase,
                                                      sched_sol,
                                                      st_exp_dt,
@@ -166,8 +162,6 @@ def sched_om(log_phase,
                                 hours=float(sched_sol['prep time_retrieve']))
                 sea_time = sched_sol['sea time_retrieve']
                 
-                print 'sea time_retrieve', sched_sol['sea time_retrieve']
-
                 journey_retrieve, WWINDOW_FLAG = waiting_time(
                                                         log_phase,
                                                         sched_sol,
@@ -208,8 +202,6 @@ def sched_om(log_phase,
                                 hours=float(sched_sol['prep time_replace']))
                 sea_time = sched_sol['sea time_replace']
                 
-                print 'sea time_replace', sched_sol['sea time_replace']
-
                 journey_replace, WWINDOW_FLAG = waiting_time(log_phase,
                                                              sched_sol,
                                                              st_exp_dt_replace,
