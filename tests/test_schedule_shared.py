@@ -91,6 +91,14 @@ def test_WaitingTime_init_years_fail_monotonic(metocean):
     
     with pytest.raises(ValueError):
         WaitingTime(metocean_copy)
+        
+        
+def test_WaitingTime_set_optimise_delay(metocean):
+    
+    test = WaitingTime(metocean)
+    test.set_optimise_delay(True)
+    
+    assert test._optimise_delay
 
 
 def test_WaitingTime_get_weather_windows(metocean):
@@ -107,7 +115,33 @@ def test_WaitingTime_get_weather_windows(metocean):
     assert (len(result['duration']) == 
             len(result['start_dt']) ==
             len(result['end_dt']))
-
+    
+    
+def test_WaitingTime_get_weather_windows_no_olc(metocean):
+    
+    test = WaitingTime(metocean)
+    
+    olc = {}
+    
+    result = test.get_weather_windows(olc)
+    
+    assert len(result['duration']) == 1
+    assert np.isclose(result['duration'][0], 61341.0)
+    
+    
+def test_WaitingTime_get_weather_windows_small_olc(metocean):
+    
+    test = WaitingTime(metocean)
+    
+    olc = {'maxHs': 0.01,
+           'maxTp': 0.01,
+           'maxWs': 0.01,
+           'maxCs': 0.01}
+    
+    result = test.get_weather_windows(olc)
+        
+    assert not result
+    
 
 def test_WaitingTime_get_whole_windows(metocean):
     
@@ -321,6 +355,56 @@ def test_WaitingTime_call(mocker, metocean):
     sched_sol = {"journey": {0: journey}}
     start_date = dt.datetime(2000, 1, 1)
     sea_time = 100
+    
+    journey, exit_flag = test(log_phase,
+                              sched_sol,
+                              start_date,
+                              sea_time)
+    
+    assert exit_flag == "WeatherWindowsFound"
+    assert 'start_delay' in journey
+    
+    
+def test_WaitingTime_call_twice(mocker, metocean):
+    
+    test = WaitingTime(metocean)
+    
+    log_phase = mocker.Mock()
+    log_phase.description = "Mocked phase"
+    
+    journey = {'prep_dur': [48, 48],
+               'prep_id': [u'Mobilisation', u'Vessel preparation & loading'],
+               'sea_dur': [35.52257567817756,
+                           6.0,
+                           2,
+                           4,
+                           0.0,
+                           35.52257567817756],
+               'sea_id': [u'Transportation from port to site',
+                          u'Vessel Positioning',
+                          u'Access to the element',
+                          u'Inspection or Maintenance Operations',
+                          u'Transportation from site to site',
+                          u'Transportation from site to port'],
+               'sea_olc': [[2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0, 0, 0],
+                           [4, 6, 15, 2],
+                           [4, 6, 15, 2],
+                           [2.5, 0.0, 0.0, 0.0],
+                           [2.5, 0.0, 0.0, 0.0]],
+               'wait_dur': []}
+    
+    sched_sol = {"journey": {0: journey}}
+    start_date = dt.datetime(2000, 1, 1)
+    sea_time = 100
+    
+    journey, exit_flag = test(log_phase,
+                              sched_sol,
+                              start_date,
+                              sea_time)
+    
+    assert exit_flag == "WeatherWindowsFound"
+    assert 'start_delay' in journey
     
     journey, exit_flag = test(log_phase,
                               sched_sol,

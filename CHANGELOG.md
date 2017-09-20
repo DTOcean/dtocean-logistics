@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added combined weather window strategy that looks for the combination of
   windows which has the minimum gaps (now classed as waiting time).
 - Added transit times to maintenance operation scheduling.
+- The sched_om function now accepts a user supplied WaitingTime object using
+  the optional custom_waiting argument. This allows a single WaitingTime
+  object to be reused between calls.
 
 ### Changed
 
@@ -34,6 +37,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Refactored sched_om to use WaitingTime class.
 - Reimplemented waiting time costing for maintenance operations.
 - Changed maintenance port selection to use approximate distance algorithm.
+- Made setting of optimise_delay flag in WaitingTime class explicit using
+  method set_optimise_delay. It can no longer be set when initialising a
+  WaitingTime object.
+- OLC matching from previous weather window searches now uses a tolerance
+  which is set using the match_tolerance argument to WaitingTime. It defaults
+  to 0.1.
+  
 
 ### Fixed
 
@@ -47,6 +57,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   maintenance feasibility check.
 - Catch case where OLC conditions generate no weather windows in WaitingTime
   class.
+- Improved efficiency of logOp_init function by better parsing of dataframe.
 
 ## [1.0.0] - 2017-01-05
 
