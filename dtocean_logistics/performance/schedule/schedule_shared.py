@@ -25,10 +25,11 @@ class WaitingTime(object):
     
     def __init__(self, metocean,
                        min_window_years=3,
-                       optimise_delay=False):
+                       match_tolerance=0.1):
         
         self.metocean = self._init_years(metocean, min_window_years)
-        self._optimise_delay = optimise_delay
+        self._match_tol = match_tolerance
+        self._optimise_delay = False
         self._olc_ww = []
         
         return
@@ -147,6 +148,12 @@ class WaitingTime(object):
         assert len(final_metocean["year [-]"].unique()) == min_window_years
         
         return final_metocean
+    
+    def set_optimise_delay(self, value):
+        
+        self._optimise_delay = value
+        
+        return
     
     def get_weather_windows(self, olc):
         
@@ -634,7 +641,10 @@ class WaitingTime(object):
     
             for ww_dict in self._olc_ww:
                 
-                if ww_dict['olc'] == olc:
+                ww_olc = ww_dict['olc']
+                delta = [abs(v - ww_olc[k]) for k, v in olc.items()]
+                
+                if all([x <= self._match_tol for x in delta]):
                     weather_wind = ww_dict['ww']
                     break
             
