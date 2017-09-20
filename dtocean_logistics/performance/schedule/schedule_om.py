@@ -28,7 +28,8 @@ def sched_om(log_phase,
              metocean,
              layout,
              om,
-             optimise_delay=False):
+             optimise_delay=False,
+             custom_waiting=None):
         
     # Check the phase ID
     allowed_phases = ['LpM1',
@@ -50,8 +51,12 @@ def sched_om(log_phase,
         raise ValueError(errStr)
 
     # initialisation
-    waiting_time = WaitingTime(metocean,
-                               optimise_delay=optimise_delay)
+    if custom_waiting is None:
+        waiting_time = WaitingTime(metocean)
+    else:
+        waiting_time = custom_waiting
+        
+    waiting_time.set_optimise_delay(optimise_delay)
         
     # loop over the number of operations
     for seq, operation in log_phase.op_ve.iteritems():  
