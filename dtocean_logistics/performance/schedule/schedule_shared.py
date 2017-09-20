@@ -148,6 +148,168 @@ class WaitingTime(object):
         
         return final_metocean
     
+    def get_weather_windows(self, olc):
+        
+        """This functions returns the starting times and the durations of all
+        weather windows found in the met-ocean data for the given operational
+        limit conditions (olc)
+        """
+    
+        # Initialisation
+        ww = {}
+    
+        # Operational limit conditions (consdiered static over the entire
+        # duration of the marine operation)
+        median_step = self.metocean["hour [-]"].diff().median()
+            
+        windowStr = "No weather windows were found for operational condition: "
+        durationStr = ("Short durations (<8 hours) detected for operational "
+                       "condition: ")
+        
+        # Build the binary weather windows:
+        #   1 = authorized access,
+        #   0 = denied access
+        if 'maxHs' in olc and olc['maxHs'] > 0:
+            Hs_bin = map(float, self.metocean['Hs [m]'] < olc['maxHs'])
+        else:
+            Hs_bin = [1] * len(self.metocean['Hs [m]'])
+            olc['maxHs'] = max(self.metocean['Hs [m]'])
+            
+        if 'maxTp' in olc and olc['maxTp'] > 0:
+            Tp_bin = map(float, self.metocean['Tp [s]'] < olc['maxTp'])
+        else:
+            Tp_bin = [1] * len(self.metocean['Tp [s]'])
+            olc['maxTp'] = max(self.metocean['Tp [s]'])
+            
+        if 'maxWs' in olc and olc['maxWs'] > 0:
+            Ws_bin = map(float, self.metocean['Ws [m/s]'] < olc['maxWs'])
+        else:
+            Ws_bin = [1] * len(self.metocean['Ws [m/s]'])
+            olc['maxWs'] = max(self.metocean['Ws [m/s]'])
+            
+        if 'maxCs' in olc and olc['maxCs'] > 0:
+            Cs_bin = map(float, self.metocean['Cs [m/s]'] < olc['maxCs'])
+        else:
+            Cs_bin = [1] * len(self.metocean['Cs [m/s]'])
+            olc['maxCs'] = max(self.metocean['Cs [m/s]'])
+
+        
+        # Convert to numpy arrays and test for no windows and exit
+        Hs_bin = np.array(Hs_bin)
+        oppStr = "maxHs < {}".format(olc['maxHs'])
+        
+        if not Hs_bin.any():            
+            module_logger.warning(windowStr + oppStr)
+            
+            return ww
+        
+        # Check for short durations
+        windows = get_window_indexes(Hs_bin, median_step)
+        max_duration = max(windows.values())
+        
+        if max_duration < 8:
+            module_logger.warning(durationStr + oppStr)
+            
+        Tp_bin = np.array(Tp_bin)
+        oppStr = "maxTp < {}".format(olc['maxTp'])
+        
+        if not Tp_bin.any():            
+            module_logger.warning(windowStr + oppStr)
+            
+            return ww
+        
+        # Check for short durations
+        windows = get_window_indexes(Tp_bin, median_step)
+        max_duration = max(windows.values())
+        
+        if max_duration < 8:
+            module_logger.warning(durationStr + oppStr)
+            
+        Ws_bin = np.array(Ws_bin)
+        oppStr = "maxWs < {}".format(olc['maxWs'])
+        
+        if not Ws_bin.any():            
+            module_logger.warning(windowStr + oppStr)
+            
+            return ww
+        
+        # Check for short durations
+        windows = get_window_indexes(Ws_bin, median_step)
+        max_duration = max(windows.values())
+        
+        if max_duration < 8:
+            module_logger.warning(durationStr + oppStr)
+        
+        Cs_bin = np.array(Cs_bin)
+        oppStr = "maxCs < {}".format(olc['maxCs'])
+        
+        if not Cs_bin.any():
+            module_logger.warning(windowStr + oppStr)
+            
+            return ww
+        
+        # Check for short durations
+        windows = get_window_indexes(Cs_bin, median_step)
+        max_duration = max(windows.values())
+        
+        if max_duration < 8:
+            module_logger.warning(durationStr + oppStr)
+        
+        # Combine the windows
+        WW_bin = np.logical_and.reduce((Hs_bin, Tp_bin, Ws_bin, Cs_bin))
+
+        # No combined weather windows exit the function
+        if not WW_bin.any():
+            
+            logStr = ("No combined weather windows were found for operational "
+                      "conditions: maxHs < {}; maxTp < {}; maxWs < {}; "
+                      "maxCs < {}").format(olc['maxHs'],
+                                           olc['maxTp'],
+                                           olc['maxWs'],
+                                           olc['maxCs'])
+            module_logger.warning(logStr)
+            
+            return ww
+    
+        # Determine the starting index and the durations of the weather windows
+        windows = get_window_indexes(WW_bin, median_step)
+    
+        st_y = []
+        st_m = []
+        st_d = []
+        st_h = []
+        st_dt = []
+        et_dt = []
+        durations = []
+
+        for ind_dt, duration in windows.iteritems():
+            
+            year = self.metocean['year [-]'][ind_dt]
+            month = self.metocean['month [-]'][ind_dt]
+            day = self.metocean['day [-]'][ind_dt]
+            hour = self.metocean['hour [-]'][ind_dt]
+            
+            start_datetime = dt.datetime(year, month, day, hour)
+            end_datetime = start_datetime + dt.timedelta(hours=int(duration))
+            
+            st_y.append(year)
+            st_m.append(month)
+            st_d.append(day)
+            st_h.append(hour)
+            st_dt.append(start_datetime)
+            et_dt.append(end_datetime)
+            durations.append(duration)
+
+        ww['start'] = {'year': st_y,
+                       'month': st_m,
+                       'day': st_d,
+                       'hour': st_h}
+        ww['start_dt'] = st_dt
+        ww['end_dt'] = et_dt
+        ww['duration'] = durations
+        
+        return ww
+    
     @classmethod
     def _get_whole_windows(cls, weather_windows, start_date_met, sea_time):
         
@@ -379,168 +541,6 @@ class WaitingTime(object):
             min_wait_idx = np.argmin(wait_times)
         
         return delays[min_wait_idx], wait_times[min_wait_idx]
-
-    def get_weather_windows(self, olc):
-        
-        """This functions returns the starting times and the durations of all
-        weather windows found in the met-ocean data for the given operational
-        limit conditions (olc)
-        """
-    
-        # Initialisation
-        ww = {}
-    
-        # Operational limit conditions (consdiered static over the entire
-        # duration of the marine operation)
-        median_step = self.metocean["hour [-]"].diff().median()
-            
-        windowStr = "No weather windows were found for operational condition: "
-        durationStr = ("Short durations (<8 hours) detected for operational "
-                       "condition: ")
-        
-        # Build the binary weather windows:
-        #   1 = authorized access,
-        #   0 = denied access
-        if 'maxHs' in olc and olc['maxHs'] > 0:
-            Hs_bin = map(float, self.metocean['Hs [m]'] < olc['maxHs'])
-        else:
-            Hs_bin = [1] * len(self.metocean['Hs [m]'])
-            olc['maxHs'] = max(self.metocean['Hs [m]'])
-            
-        if 'maxTp' in olc and olc['maxTp'] > 0:
-            Tp_bin = map(float, self.metocean['Tp [s]'] < olc['maxTp'])
-        else:
-            Tp_bin = [1] * len(self.metocean['Tp [s]'])
-            olc['maxTp'] = max(self.metocean['Tp [s]'])
-            
-        if 'maxWs' in olc and olc['maxWs'] > 0:
-            Ws_bin = map(float, self.metocean['Ws [m/s]'] < olc['maxWs'])
-        else:
-            Ws_bin = [1] * len(self.metocean['Ws [m/s]'])
-            olc['maxWs'] = max(self.metocean['Ws [m/s]'])
-            
-        if 'maxCs' in olc and olc['maxCs'] > 0:
-            Cs_bin = map(float, self.metocean['Cs [m/s]'] < olc['maxCs'])
-        else:
-            Cs_bin = [1] * len(self.metocean['Cs [m/s]'])
-            olc['maxCs'] = max(self.metocean['Cs [m/s]'])
-
-        
-        # Convert to numpy arrays and test for no windows and exit
-        Hs_bin = np.array(Hs_bin)
-        oppStr = "maxHs < {}".format(olc['maxHs'])
-        
-        if not Hs_bin.any():            
-            module_logger.warning(windowStr + oppStr)
-            
-            return ww
-        
-        # Check for short durations
-        windows = get_window_indexes(Hs_bin, median_step)
-        max_duration = max(windows.values())
-        
-        if max_duration < 8:
-            module_logger.warning(durationStr + oppStr)
-            
-        Tp_bin = np.array(Tp_bin)
-        oppStr = "maxTp < {}".format(olc['maxTp'])
-        
-        if not Tp_bin.any():            
-            module_logger.warning(windowStr + oppStr)
-            
-            return ww
-        
-        # Check for short durations
-        windows = get_window_indexes(Tp_bin, median_step)
-        max_duration = max(windows.values())
-        
-        if max_duration < 8:
-            module_logger.warning(durationStr + oppStr)
-            
-        Ws_bin = np.array(Ws_bin)
-        oppStr = "maxWs < {}".format(olc['maxWs'])
-        
-        if not Ws_bin.any():            
-            module_logger.warning(windowStr + oppStr)
-            
-            return ww
-        
-        # Check for short durations
-        windows = get_window_indexes(Ws_bin, median_step)
-        max_duration = max(windows.values())
-        
-        if max_duration < 8:
-            module_logger.warning(durationStr + oppStr)
-        
-        Cs_bin = np.array(Cs_bin)
-        oppStr = "maxCs < {}".format(olc['maxCs'])
-        
-        if not Cs_bin.any():
-            module_logger.warning(windowStr + oppStr)
-            
-            return ww
-        
-        # Check for short durations
-        windows = get_window_indexes(Cs_bin, median_step)
-        max_duration = max(windows.values())
-        
-        if max_duration < 8:
-            module_logger.warning(durationStr + oppStr)
-        
-        # Combine the windows
-        WW_bin = np.logical_and.reduce((Hs_bin, Tp_bin, Ws_bin, Cs_bin))
-
-        # No combined weather windows exit the function
-        if not WW_bin.any():
-            
-            logStr = ("No combined weather windows were found for operational "
-                      "conditions: maxHs < {}; maxTp < {}; maxWs < {}; "
-                      "maxCs < {}").format(olc['maxHs'],
-                                           olc['maxTp'],
-                                           olc['maxWs'],
-                                           olc['maxCs'])
-            module_logger.warning(logStr)
-            
-            return ww
-    
-        # Determine the starting index and the durations of the weather windows
-        windows = get_window_indexes(WW_bin, median_step)
-    
-        st_y = []
-        st_m = []
-        st_d = []
-        st_h = []
-        st_dt = []
-        et_dt = []
-        durations = []
-
-        for ind_dt, duration in windows.iteritems():
-            
-            year = self.metocean['year [-]'][ind_dt]
-            month = self.metocean['month [-]'][ind_dt]
-            day = self.metocean['day [-]'][ind_dt]
-            hour = self.metocean['hour [-]'][ind_dt]
-            
-            start_datetime = dt.datetime(year, month, day, hour)
-            end_datetime = start_datetime + dt.timedelta(hours=int(duration))
-            
-            st_y.append(year)
-            st_m.append(month)
-            st_d.append(day)
-            st_h.append(hour)
-            st_dt.append(start_datetime)
-            et_dt.append(end_datetime)
-            durations.append(duration)
-
-        ww['start'] = {'year': st_y,
-                       'month': st_m,
-                       'day': st_d,
-                       'hour': st_h}
-        ww['start_dt'] = st_dt
-        ww['end_dt'] = et_dt
-        ww['duration'] = durations
-        
-        return ww
                 
     def __call__(self, log_phase, sched_sol, start_date, sea_time):
         
