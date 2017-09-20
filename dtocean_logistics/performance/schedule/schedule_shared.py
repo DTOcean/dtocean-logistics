@@ -200,12 +200,11 @@ class WaitingTime(object):
             Cs_bin = [1] * len(self.metocean['Cs [m/s]'])
             olc['maxCs'] = max(self.metocean['Cs [m/s]'])
 
-        
         # Convert to numpy arrays and test for no windows and exit
         Hs_bin = np.array(Hs_bin)
         oppStr = "maxHs < {}".format(olc['maxHs'])
         
-        if not Hs_bin.any():            
+        if not Hs_bin.any():
             module_logger.warning(windowStr + oppStr)
             
             return ww
@@ -220,7 +219,7 @@ class WaitingTime(object):
         Tp_bin = np.array(Tp_bin)
         oppStr = "maxTp < {}".format(olc['maxTp'])
         
-        if not Tp_bin.any():            
+        if not Tp_bin.any():
             module_logger.warning(windowStr + oppStr)
             
             return ww
@@ -235,7 +234,7 @@ class WaitingTime(object):
         Ws_bin = np.array(Ws_bin)
         oppStr = "maxWs < {}".format(olc['maxWs'])
         
-        if not Ws_bin.any():            
+        if not Ws_bin.any():
             module_logger.warning(windowStr + oppStr)
             
             return ww
