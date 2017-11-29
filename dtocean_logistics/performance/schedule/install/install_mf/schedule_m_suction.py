@@ -13,7 +13,7 @@ from .....ancillaries.find import indices
 from .....ancillaries.nanTOzero import nan2zero
 import math
 
-from dtocean_logistics.load.snap_2_grid import snap_to_grid
+from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 import logging
 module_logger = logging.getLogger(__name__)
@@ -66,6 +66,8 @@ def sched_m_suction(seq, ind_sol, install, log_phase, site, entry_point, device,
     op_id_demob_jour = {0:[]}
     op_dur_demob_jour = {0:[]}
     op_olc_jour = {0:[]}
+    
+    snap_to_grid = SnapToGrid(site)
 
     # number of gravity anchors to install
     found_db = foundation
@@ -418,7 +420,7 @@ def sched_m_suction(seq, ind_sol, install, log_phase, site, entry_point, device,
                         UTM_elem_y = suction_db['y coord [m]'].ix[elem_id]
                         UTM_zone = suction_db['zone [-]'].ix[elem_id]
                         # check the closest point in the site data
-                        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+                        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
                         # obtain site data for the coordinates
                         site_coord = site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                                            (site['y coord [m]'] == float( closest_point[1] )) & \
