@@ -13,7 +13,7 @@ BETA VERSION NOTES: This module is still to be done.
 from math import pi
 import pandas as pd
 import numpy as np
-from dtocean_logistics.load.snap_2_grid import snap_to_grid
+from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 import logging
 module_logger = logging.getLogger(__name__)
@@ -378,6 +378,8 @@ def dynamic_feas(log_phase, log_phase_id, site,
     site_down = pd.DataFrame()
     connect_db = connectors
     
+    snap_to_grid = SnapToGrid(site)
+        
     dyn_mass = dyn_db['dry mass [kg/m]'].fillna(0)/1000.0
     dyn_total_mass = dyn_db['total dry mass [kg]'].fillna(0)
     dyn_lenght = dyn_db['length [m]'].fillna(0)
@@ -412,12 +414,11 @@ def dynamic_feas(log_phase, log_phase_id, site,
         UTM_zone = coord_zone_up[a]
 
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_up = site_up.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                            (site['y coord [m]'] == float( closest_point[1] )) & \
                            (site['zone [-]'] == UTM_zone) ])
-
                                        
     depth_up = site_up['bathymetry [m]'].fillna(0)
     depth_up = depth_up.tolist()    
@@ -432,7 +433,7 @@ def dynamic_feas(log_phase, log_phase_id, site,
         UTM_zone = coord_zone_down[a]
 
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_down = site_down.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                            (site['y coord [m]'] == float( closest_point[1] )) & \
@@ -513,6 +514,8 @@ def cp_feas(log_phase, log_phase_id, site, collection_point):
     site = site
     site_cp = pd.DataFrame()
     
+    snap_to_grid = SnapToGrid(site)
+    
     cp_weight = cp_db['dry mass [kg]'].fillna(0)/1000.0
     cp_lenght = cp_db['length [m]'].fillna(0)
     cp_width = cp_db['width [m]'].fillna(0)
@@ -530,7 +533,7 @@ def cp_feas(log_phase, log_phase_id, site, collection_point):
         UTM_elem_y = cp_coord_y[a]
         UTM_zone = cp_coord_zone[a]
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_cp = site_cp.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                            (site['y coord [m]'] == float( closest_point[1] )) & \
@@ -631,6 +634,8 @@ def external_feas(log_phase, log_phase_id, site, external_protection):
     site = site
     site_external = pd.DataFrame()
     
+    snap_to_grid = SnapToGrid(site)
+    
     external_coord_x = list(external_db['x coord [m]'])
     external_coord_y = list(external_db['y coord [m]'])
     external_coord_zone = list(external_db['zone [-]'])
@@ -641,7 +646,7 @@ def external_feas(log_phase, log_phase_id, site, external_protection):
         UTM_zone = external_coord_zone[a]
 
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_external = site_external.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                            (site['y coord [m]'] == float( closest_point[1] )) & \

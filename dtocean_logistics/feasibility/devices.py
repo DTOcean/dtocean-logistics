@@ -10,7 +10,7 @@ function related to the installation of devices.
 
 """
 
-from dtocean_logistics.load.snap_2_grid import snap_to_grid
+from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 
 def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
@@ -49,6 +49,7 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
     trans_methd = device['transportation method [-]'].iloc[0]
     loadout_methd = device['load out [-]']
     
+    snap_to_grid = SnapToGrid(site)
 
     device_depth = []
     for indx_dev, row in layout.iterrows():
@@ -56,7 +57,7 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
         UTM_elem_y = layout['y coord [m]'].ix[indx_dev]
         UTM_zone = layout['zone [-]'].ix[indx_dev]
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_coord = site[ (site['x coord [m]'] == closest_point[0]) & \
                            (site['y coord [m]'] == closest_point[1]) & \

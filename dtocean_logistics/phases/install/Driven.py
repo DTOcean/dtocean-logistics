@@ -35,13 +35,15 @@ See also: ...
 """
 
 from .classes import DefPhase, LogPhase
-from dtocean_logistics.load.snap_2_grid import snap_to_grid
+from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 import logging
 module_logger = logging.getLogger(__name__)
 
 def init_drive_phase(log_op, vessels, equipments, foundation, penet_rates, site):
 
+    snap_to_grid = SnapToGrid(site)
+    
     phase = {}
     if len(foundation) > 0:
         # save outputs required inside short named variables
@@ -55,7 +57,7 @@ def init_drive_phase(log_op, vessels, equipments, foundation, penet_rates, site)
             UTM_elem_y = driven_db['y coord [m]'].ix[indx_moo]
             UTM_zone = driven_db['zone [-]'].ix[indx_moo]
             # check the closest point in the site data
-            closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+            closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
             # obtain site data for the coordinates
             site_coord = site[ (site['x coord [m]'] == float( closest_point[0] )) & \
                                (site['y coord [m]'] == float( closest_point[1] )) & \

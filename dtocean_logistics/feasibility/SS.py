@@ -14,7 +14,7 @@ futher developed in the beta version due to October.
 """
 
 import numpy as np
-from dtocean_logistics.load.snap_2_grid import snap_to_grid
+from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 
 def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
@@ -51,6 +51,8 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
     moo_line_len_u = []  # list of mooring line length by the set of foundation(s) per unit
     moo_mass_u = []  # list of mooring line mass by the set of foundation(s) per unit
 
+    snap_to_grid = SnapToGrid(site)
+
     support = sub_device.ix['D'] # corresponds to 'D'
 
     length_ss = support['length [m]']
@@ -64,7 +66,7 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
         UTM_elem_y = layout['y coord [m]'].ix[indx_dev]
         UTM_zone = layout['zone [-]'].ix[indx_dev]
         # check the closest point in the site data
-        closest_point = snap_to_grid(site, (UTM_elem_x,UTM_elem_y))
+        closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
         site_coord = site[ (site['x coord [m]'] == closest_point[0]) & \
                            (site['y coord [m]'] == closest_point[1]) & \
