@@ -49,6 +49,10 @@ def select_e(install, log_phase):
                        equipments within each vessel and equipment combinations dataframes
     """
 
+    logMsg = ("Selecting equipment for log phase: "
+              "{}").format(log_phase.description)
+    module_logger.info(logMsg)
+
     req_e = install['requirement'][0]
     #Initialize an empty dic with the name of the equip to be evaluated
     eq = dict.fromkeys(req_e.keys())
@@ -156,6 +160,10 @@ def select_v(install, log_phase):
     log_phase (class): An updated version of the log_phase argument containing only the feasible
                        equipments within each vessel and equipment combinations dataframes
     """
+    
+    logMsg = ("Selecting vessels for log phase: "
+              "{}").format(log_phase.description)
+    module_logger.info(logMsg)
 
     # load the vessel requirements inside a short named variable
     req_v = install['requirement'][1]
