@@ -123,8 +123,7 @@ def sched_om(log_phase,
                                 
                 journey, WWINDOW_FLAG = waiting_time(log_phase,
                                                      sched_sol,
-                                                     st_exp_dt,
-                                                     sched_sol['sea time'])
+                                                     st_exp_dt)
                 
                 # Loop if no weather window
                 if WWINDOW_FLAG == 'NoWWindows': continue
@@ -170,8 +169,7 @@ def sched_om(log_phase,
                 journey_retrieve, WWINDOW_FLAG = waiting_time(
                                                         log_phase,
                                                         sched_sol,
-                                                        st_exp_dt_retrieve,
-                                                        sea_time)
+                                                        st_exp_dt_retrieve)
                 
                 # Loop if no weather window
                 if WWINDOW_FLAG == 'NoWWindows': continue
@@ -209,8 +207,7 @@ def sched_om(log_phase,
                 
                 journey_replace, WWINDOW_FLAG = waiting_time(log_phase,
                                                              sched_sol,
-                                                             st_exp_dt_replace,
-                                                             sea_time)
+                                                             st_exp_dt_replace)
 
                 # Loop if no weather window
                 if WWINDOW_FLAG == 'NoWWindows': continue
