@@ -128,13 +128,15 @@ def sched(x,
                 sched_sol['waiting time'] = journey['wait_dur']
             else:
                 sched_sol['waiting time'] += journey['wait_dur']
+                
+            start_delays = journey['start_delay']
+            mean_delay = sum(start_delays) / float(len(start_delays))
             
             # Update total time
-            sched_sol['total time'] += journey['start_delay'] + \
+            sched_sol['total time'] += [mean_delay] + \
                                                     sched_sol['waiting time']
             
-            departure_dt = st_exp_dt + \
-                                timedelta(hours=sum(journey['start_delay']))
+            departure_dt = st_exp_dt + timedelta(hours=mean_delay)
             end_dt = departure_dt + \
                             timedelta(hours=sched_sol['sea time']) + \
                                 timedelta(hours=sum(sched_sol['waiting time']))
