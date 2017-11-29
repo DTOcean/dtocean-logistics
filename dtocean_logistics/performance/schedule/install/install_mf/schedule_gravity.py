@@ -81,8 +81,8 @@ def sched_gravity(seq, ind_sol, install, log_phase, site, entry_point, device, l
     # list of the vessel(s) and equipment combination used for this feasible solution
     ve_combi = log_phase.op_ve[seq].sol[ind_sol]['VEs']
      # initialise the area and dry mass list
-    elem_area = gravity_db['dry mass [kg]'].fillna(0)/1000.0 # [ton]
-    elem_mass = gravity_db['length [m]'].fillna(0) * gravity_db['width [m]'].fillna(0)
+    elem_mass = gravity_db['dry mass [kg]'].fillna(0)/1000.0 # [ton]
+    elem_area = gravity_db['length [m]'].fillna(0) * gravity_db['width [m]'].fillna(0)
     # assumption: the first vessel is always the main installation vessel
     sol_pd_series = log_phase.op_ve[seq].sol[ind_sol]['VEs'][0][2]
     # number of equipment in the main vessel
@@ -145,7 +145,7 @@ def sched_gravity(seq, ind_sol, install, log_phase, site, entry_point, device, l
         elif nb_el_journey[nb_journey] == 0:
             # error that means not a single element can fit!
             msg = ("No single element can fit on deck.")
-            module_logger.warning(msg)
+            raise RuntimeError(msg)
         else:
             nb_elem_port = nb_elem_port - nb_el_journey[nb_journey]
             elem_mass = elem_mass.iloc[nb_el_journey[-1]:]
