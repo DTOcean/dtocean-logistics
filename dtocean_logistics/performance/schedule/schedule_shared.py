@@ -25,10 +25,12 @@ class WaitingTime(object):
     
     def __init__(self, metocean,
                        min_window_years=3,
-                       match_tolerance=0.1):
+                       match_tolerance=0.1,
+                       max_start_delay=8760):
         
         self.metocean = self._init_years(metocean, min_window_years)
         self._match_tol = match_tolerance
+        self._max_start_delay = max_start_delay
         self._optimise_delay = False
         self._olc_ww = []
         
@@ -409,7 +411,7 @@ class WaitingTime(object):
                                      start_date,
                                      sea_time):
         
-        start_delay = None
+        mean_delay = None
         waiting_time = None
         
         # Get the years of metocean data excluding the last
@@ -419,7 +421,7 @@ class WaitingTime(object):
         
         # Attempt to find whole weather windows, starting in each year of the
         # metocean data and then calculate the mean start delay
-        for year in years:
+        for i, year in enumerate(years):
             
             # Set the year to match metocean data and avoid reaching the 29th
             # of February in a 366 days year
@@ -447,106 +449,163 @@ class WaitingTime(object):
                     
             if not ind_ww_all:
                 
-                latest_window = max(weather_windows['start_dt'])
-                max_dur = max(weather_windows['duration'])
-                
                 date_format = lambda x: "{:%d-%b %H:%M}".format(x)
                 
                 logStr = ("No combined start dates and durations found "
                           "for operation with start date '{}' and "
-                          "duration {} hours. Latest available window is "
-                          "'{}' and longest duration is {} hours").format(
-                                              date_format(start_date),
-                                              sea_time,
-                                              date_format(latest_window),
-                                              max_dur)
+                          "duration {} hours in year {}").format(
+                                                  date_format(start_date),
+                                                  sea_time,
+                                                  i)
                 
                 module_logger.warning(logStr)
                 
-            else:
-                
-                # Find the index of the first suitable weather window
-                ind_ww_first = min(ind_ww_all)
-                
-                # Get the start delay
-                start_delay = self._get_start_delay(weather_windows,
-                                                    start_date_met,
-                                                    ind_ww_first)
-                start_delays.append(start_delay)
-                
-        if start_delays:
-            start_delay = np.array(start_delays).mean()
+                return mean_delay, waiting_time
+                                
+            # Find the index of the first suitable weather window
+            ind_ww_first = min(ind_ww_all)
             
-        return start_delay, waiting_time
+            # Get the start delay
+            start_delay = self._get_start_delay(weather_windows,
+                                                start_date_met,
+                                                ind_ww_first)
+                            
+            # If the start delay exceeds the maximum then abort the strategy
+            if (self._max_start_delay is not None and
+                start_delay > self._max_start_delay):
+                
+                date_format = lambda x: "{:%d-%b %H:%M}".format(x)
+                
+                logStr = ("No continuous weather windows found "
+                          "for operation with start date '{}' and "
+                          "duration {} hours in year {}, below the maximum "
+                          "start delay of {} hours.").format(
+                                                      date_format(start_date),
+                                                      sea_time,
+                                                      year,
+                                                      self._max_start_delay)
+                
+                module_logger.warning(logStr)
+                
+                return mean_delay, waiting_time
+            
+            start_delays.append(start_delay)
+                                
+        if start_delays:
+            mean_delay = np.array(start_delays).mean()
+            
+        return mean_delay, waiting_time
     
     def _combined_window_strategy(self, weather_windows,
                                         start_date,
                                         sea_time):
-
         
-        # Set the year to match metocean data and avoid reaching the 29th
-        # of February in a 366 days year
-        if (not is_leap_year(first_year) and
-            start_date.month == 2 and
-            start_date.day > 28):
-            
-            start_date_met = dt.datetime(first_year,
-                                         3,
-                                         1,
-                                         start_date.hour)
-            
-        else:
-            
-            start_date_met = dt.datetime(first_year,
-                                         start_date.month,
-                                         start_date.day,
-                                         start_date.hour)
-            
-        # Look for indexes of weather windows starting after the given
-        # start date
-        idx_ww_sd = indices(weather_windows['start_dt'],
-                            lambda x: x >= start_date_met)
+        start_delays = []
+        waiting_times = []
         
-        # Collect delay, duration and gaps between windows
-        (window_delays,
-         window_durations,
-         window_gaps) = self._get_window_info(weather_windows,
-                                              start_date_met,
-                                              idx_ww_sd)
-
-        # Run through the windows, searching for the combination with least
-        # waiting time
-        delays, wait_times = self._get_combined_windows(window_delays,
-                                                        window_durations,
-                                                        window_gaps,
-                                                        sea_time,
-                                                        idx_ww_sd)
-        
-        # If no cumulative windows were found return None
-        if not delays:
-            
-            date_format = lambda x: "{:%d-%b %H:%M}".format(x)
-            
-            logStr = ("No cumulative windows found for operation with "
-                      "start date '{}'").format(date_format(start_date))
-            
-            module_logger.warning(logStr)            
         # Get the years of metocean data excluding the last
         years = self.metocean['year [-]'].unique()[:-1]
-            
-            return None, None
-
-        if self._optimise_delay:
-            
-            # Get group of windows with minimum delay
-            min_wait_idx = 0
-            
-        else:
-            
-            # Get group of windows with minimum waiting time
-            min_wait_idx = np.argmin(wait_times)
         
-        return delays[min_wait_idx], wait_times[min_wait_idx]
+        # Attempt to groups of weather windows covering the operation
+        # duration, starting in each year of the metocean data and then
+        # calculate the mean start delay and waiting time
+        for i, year in enumerate(years):
+        
+            # Set the year to match metocean data and avoid reaching the 29th
+            # of February in a 366 days year
+            if (not is_leap_year(year) and
+                start_date.month == 2 and
+                start_date.day > 28):
+                
+                start_date_met = dt.datetime(year,
+                                             3,
+                                             1,
+                                             start_date.hour)
+                
+            else:
+                
+                start_date_met = dt.datetime(year,
+                                             start_date.month,
+                                             start_date.day,
+                                             start_date.hour)
+                
+            # Look for indexes of weather windows starting after the given
+            # start date
+            idx_ww_sd = indices(weather_windows['start_dt'],
+                                lambda x: x >= start_date_met)
+            
+            # Collect delay, duration and gaps between windows
+            (window_delays,
+             window_durations,
+             window_gaps) = self._get_window_info(weather_windows,
+                                                  start_date_met,
+                                                  idx_ww_sd)
+                
+            # Run through the windows, searching for the combination with least
+            # waiting time
+            delays, wait_times = self._get_combined_windows(window_delays,
+                                                            window_durations,
+                                                            window_gaps,
+                                                            sea_time,
+                                                            idx_ww_sd)
+            
+            if self._max_start_delay is not None:
+
+                # Get group of windows with waiting time below the maximum
+                year_wait_times = np.ma.masked_where(
+                                    np.array(delays) > self._max_start_delay,
+                                    wait_times)
+                
+            else:
+                
+                year_wait_times = np.ma.array(wait_times)
+            
+            # If no cumulative windows were found (possibly within the
+            # maximum waiting time) then abort the strategy            
+            if np.ma.is_masked(year_wait_times):
+                check_mask = year_wait_times.mask.all()
+            else:
+                check_mask = False
+            
+            if not delays or check_mask:
+                
+                date_format = lambda x: "{:%d-%b %H:%M}".format(x)
+                
+                logStr = ("No cumulative windows found for operation with "
+                          "start date '{}' in year {}").format(
+                                                      date_format(start_date),
+                                                      i)
+                
+                if self._max_start_delay is not None:
+                    
+                    extraStr = (" and maximum start delay of {} "
+                                "hours").format(self._max_start_delay)
+                    logStr += extraStr
+                
+                module_logger.warning(logStr)            
+                
+                return None, None
+    
+            if self._optimise_delay:
+                
+                # Get group of windows with minimum delay
+                min_wait_idx = 0
+                
+            else:
+                
+                # Get the group of windows with minimum waiting time
+                min_wait_idx = np.ma.argmin(year_wait_times)
+                    
+            start_delay = delays[min_wait_idx]
+            waiting_time = wait_times[min_wait_idx]
+                    
+            start_delays.append(start_delay)
+            waiting_times.append(waiting_time)
+            
+        mean_start_delay = sum(start_delays) / float(len(start_delays))
+        mean_waiting_time = sum(waiting_times) / float(len(waiting_times))
+        
+        return mean_start_delay, mean_waiting_time
                 
     def __call__(self, log_phase, sched_sol, start_date):
         
