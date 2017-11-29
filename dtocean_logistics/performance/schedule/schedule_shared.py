@@ -412,8 +412,8 @@ class WaitingTime(object):
         start_delay = None
         waiting_time = None
         
-        # Get the years of metoncea data
-        years = self.metocean['year [-]'].unique()
+        # Get the years of metocean data excluding the last
+        years = self.metocean['year [-]'].unique()[:-1]
 
         start_delays = []
         
@@ -483,8 +483,6 @@ class WaitingTime(object):
                                         start_date,
                                         sea_time):
 
-        # Get the first year of the metoncea data
-        first_year = self.metocean['year [-]'].unique()[0]
         
         # Set the year to match metocean data and avoid reaching the 29th
         # of February in a 366 days year
@@ -533,6 +531,8 @@ class WaitingTime(object):
                       "start date '{}'").format(date_format(start_date))
             
             module_logger.warning(logStr)            
+        # Get the years of metocean data excluding the last
+        years = self.metocean['year [-]'].unique()[:-1]
             
             return None, None
 
