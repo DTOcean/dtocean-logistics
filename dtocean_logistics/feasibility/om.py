@@ -467,7 +467,7 @@ def om_feas(log_phase, log_phase_id, OM_outputs, user_inputs, electrical_outputs
         deck_area = 0
         deck_cargo = 0
         deck_loading = 0
-        BollardPull = sum(element_mass)
+        BollardPull = device_df['bollard pull [t]'].iloc[0]
         ext_personnel = max(nr_technician)
         bathymetry = max(depth)
         rov_class = 'Workclass'
