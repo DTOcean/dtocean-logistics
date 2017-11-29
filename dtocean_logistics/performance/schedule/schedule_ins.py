@@ -117,8 +117,7 @@ def sched(x,
 
             journey, WWINDOW_FLAG = waiting_time(log_phase,
                                                  sched_sol,
-                                                 st_exp_dt,
-                                                 sched_sol['sea time'])
+                                                 st_exp_dt)
 
             # stop_time1 = timeit.default_timer()  # TIME ASSESSMENT   
 

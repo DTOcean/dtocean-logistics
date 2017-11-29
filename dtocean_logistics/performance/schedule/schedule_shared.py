@@ -548,7 +548,7 @@ class WaitingTime(object):
         
         return delays[min_wait_idx], wait_times[min_wait_idx]
                 
-    def __call__(self, log_phase, sched_sol, start_date, sea_time):
+    def __call__(self, log_phase, sched_sol, start_date):
         
         """
         Waiting time calculation based on requested time and weather window
@@ -564,6 +564,9 @@ class WaitingTime(object):
                 
         # loop over the number of vessel journeys
         for journey in sched_sol['journey'].itervalues():
+            
+            # nansum will ignore NaN values (created by bugs...)
+            sea_time = np.nansum(journey['sea_dur'])
             
             # initialisation of the parameters for the weather window
             # calculation
