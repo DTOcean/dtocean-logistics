@@ -133,12 +133,14 @@ def sched_om(log_phase,
                 else:
                     sched_sol['waiting time'] += journey['wait_dur']
                 
-                # Update total time                
-                sched_sol['total time'] += journey['start_delay'] + \
+                start_delays = journey['start_delay']
+                mean_delay = sum(start_delays) / float(len(start_delays))
+                
+                # Update total time
+                sched_sol['total time'] += [mean_delay] + \
                                                     sched_sol['waiting time']
                 
-                departure_dt = st_exp_dt + \
-                                dt.timedelta(hours=sum(journey['start_delay']))
+                departure_dt = st_exp_dt + dt.timedelta(hours=mean_delay)
                 end_dt = departure_dt + \
                         dt.timedelta(hours=sched_sol['sea time']) + \
                             dt.timedelta(hours=sum(sched_sol['waiting time']))
@@ -180,8 +182,11 @@ def sched_om(log_phase,
                     waiting_time_retrieve = sched_sol['waiting time'] + \
                                                 journey_retrieve['wait_dur']
                                                 
-                retrieve_time = journey_retrieve['start_delay'] + \
-                                                    waiting_time_retrieve
+                start_delays = journey_retrieve['start_delay']
+                mean_retrieve_delay = sum(start_delays) / \
+                                                    float(len(start_delays))
+                                                
+                retrieve_time = [mean_retrieve_delay] + waiting_time_retrieve
                 om_time = float(om['d_om [hour]'].ix[0])
                                                 
                 st_rts_dt = st_exp_dt_retrieve + \
@@ -218,8 +223,11 @@ def sched_om(log_phase,
                     waiting_time_replace = sched_sol['waiting time'] + \
                                                 journey_replace['wait_dur']
                                                 
-                replace_time = journey_replace['start_delay'] + \
-                                                    waiting_time_replace
+                start_delays = journey_replace['start_delay']
+                mean_replace_delay = sum(start_delays) / \
+                                                    float(len(start_delays))
+                                                
+                replace_time = [mean_replace_delay] + waiting_time_replace
                                                     
                 # Record solution
                 sched_sol['waiting time_retrieve'] = waiting_time_retrieve
@@ -237,10 +245,10 @@ def sched_om(log_phase,
 
                 depart_dt['weather windows depart_dt_retrieve'] = \
                     st_exp_dt_retrieve + \
-                    dt.timedelta(hours=sum(journey_retrieve['start_delay']))
+                    dt.timedelta(hours=mean_retrieve_delay)
                 depart_dt['weather windows depart_dt_replace'] = \
                     st_exp_dt_replace + \
-                    dt.timedelta(hours=sum(journey_replace['start_delay']))
+                    dt.timedelta(hours=mean_replace_delay)
 
                 sched_sol['weather windows depart_dt'] = depart_dt
 
