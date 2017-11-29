@@ -227,6 +227,10 @@ def compatibility_ve(install, log_phase, port_chosen_data):
     if Num_sols==0:
 
         EXIT_FLAG = 'NoSolutions'
+        
+        logMsg = ("No vessel and equipment combinations found for "
+                  "log phase: {}").format(log_phase.description)
+        module_logger.critical(logMsg)
 
     else:
 
