@@ -395,7 +395,7 @@ class WaitingTime(object):
         
             last_idx = np.argmax(cum_durations >= sea_time)
             
-            if cum_gaps.size > 0:
+            if cum_gaps.size > 0 and last_idx > 0:
                 wait_time = cum_gaps[last_idx - 1]
             else:
                 wait_time = 0.
