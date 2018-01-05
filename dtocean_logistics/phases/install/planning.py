@@ -92,7 +92,7 @@ def install_plan(phase_order, device, layout, collection_point, dynamic_cable,
             else:  # Default order is 0 for the pile foundation
                 order_f_d = 0
                 install_plan[order_f_d].append('Driven')
-        if any(typ == 'gravity anchor' for typ in f_type_list):
+        if any(typ == 'gravity anchor' for typ in f_type_list) or any(typ == 'gravity foundation' for typ in f_type_list):
             # Consider the order defined by the user if any
             if any(typ == 'Gravity' for typ in po_type_list):
                 order_f_g = phase_order['Default Order'].ix['Gravity']
