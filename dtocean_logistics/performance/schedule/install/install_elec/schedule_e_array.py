@@ -645,6 +645,14 @@ def sched_e_array(seq, ind_sol, install, log_phase, site, entry_point,
         # increment journey
         ind_el = ind_el + nb_el_journey[jour]
         
+        logMsg = "Phase durations for journey number {}".format(jour)
+        module_logger.debug(logMsg)
+        
+        for op_id, op_dur in zip(op_id_sea_jour[jour], op_dur_sea_jour[jour]):
+            
+            logMsg = "{}: {}".format(op_id, op_dur)
+            module_logger.debug(logMsg)
+        
     # print op_olc_sea
     # add demobilisation time to finalise the logistic phase 
     log_op_demob = log_phase.op_ve[seq].op_seq_demob[0]
