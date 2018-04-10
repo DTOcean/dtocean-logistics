@@ -120,6 +120,7 @@ port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
 vessels = load_vessel_data(database_file("logisticsDB_vessel_python.xlsx"))
 equipments = load_equipment_data(database_file("logisticsDB_equipment_python.xlsx"))
 ports = load_port_data(database_file("logisticsDB_ports_python.xlsx"))
+ports.replace({r'[^\x00-\x7F]+':''}, regex=True, inplace=True)
 #upstream module inputs/outputs
 site, metocean, device, sub_device, landfall, entry_point = load_user_inputs(database_file("inputs_user.xlsx"))
 layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic.xlsx"))
@@ -131,8 +132,8 @@ line, foundation = load_MF_outputs(database_file("outputs_MF.xlsx"))
 
 # OUTPUT options:
 # *** Print outputs to terminal ***
-# PRINT_FLAG = True
-PRINT_FLAG = False
+PRINT_FLAG = True
+# PRINT_FLAG = False
 # *** Print plots ***
 # PLOT_FLAG = True
 PLOT_FLAG = False

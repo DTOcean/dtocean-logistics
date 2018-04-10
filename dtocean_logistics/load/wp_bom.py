@@ -85,6 +85,7 @@ def load_electrical_outputs(file_path):
     collection_point = excel.parse('collection point', header=0, index_col=0)
     dynamic_cable = excel.parse('dynamic cable', header=0, index_col=0)
     static_cable = excel.parse('static cable', header=0, index_col=0)
+    static_cable['trench type [-]'] = static_cable['trench type [-]'].apply(lambda x: eval(x))
     cable_route = excel.parse('cable route', header=0, index_col=0)
     connectors = excel.parse('connectors', header=0, index_col=0)
     external_protection = excel.parse('external protection', header=0, index_col=0)
