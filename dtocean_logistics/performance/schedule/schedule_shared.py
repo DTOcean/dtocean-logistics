@@ -440,10 +440,14 @@ class WaitingTime(object):
                                              start_date.month,
                                              start_date.day,
                                              start_date.hour)
+
+            # Trim the windows to the operation start
+            trimmed_windows = trim_weather_windows(weather_windows,
+                                                   start_date_met)
                 
             # Look for indexes of weather windows starting after the given
-            # start date
-            ind_ww_all = self._get_whole_windows(weather_windows,
+            # start date                        
+            ind_ww_all = self._get_whole_windows(trimmed_windows,
                                                  start_date_met,
                                                  sea_time)
                     
@@ -466,7 +470,7 @@ class WaitingTime(object):
             ind_ww_first = min(ind_ww_all)
             
             # Get the start delay
-            start_delay = self._get_start_delay(weather_windows,
+            start_delay = self._get_start_delay(trimmed_windows,
                                                 start_date_met,
                                                 ind_ww_first)
                             
@@ -529,15 +533,19 @@ class WaitingTime(object):
                                              start_date.day,
                                              start_date.hour)
                 
+            # Trim the windows to the operation start
+            trimmed_windows = trim_weather_windows(weather_windows,
+                                                   start_date_met)
+                
             # Look for indexes of weather windows starting after the given
             # start date
-            idx_ww_sd = indices(weather_windows['start_dt'],
+            idx_ww_sd = indices(trimmed_windows['start_dt'],
                                 lambda x: x >= start_date_met)
             
             # Collect delay, duration and gaps between windows
             (window_delays,
              window_durations,
-             window_gaps) = self._get_window_info(weather_windows,
+             window_gaps) = self._get_window_info(trimmed_windows,
                                                   start_date_met,
                                                   idx_ww_sd)
                 
@@ -822,3 +830,68 @@ def is_leap_year(year):
         result = False
     
     return result
+
+def trim_weather_windows(weather_windows, op_start):
+    
+    """Remove any weather windows prior to the op_start and reduce the length
+    of a window which contains the op_start, so that the window starts on the
+    same date"""
+    
+    # Edge case with no weather windows earlier than the op_start
+    if weather_windows['start_dt'][0] >= op_start: return weather_windows
+        
+    i = 0
+    st_y = []
+    st_m = []
+    st_d = []
+    st_h = []
+    st_dt = []
+    et_dt = []
+    durations = []
+    
+    while i < len(weather_windows['end_dt']):
+        
+        end_dt = weather_windows['end_dt'][i]
+        
+        if end_dt < op_start:
+            
+            i += 1
+            continue
+        
+        if end_dt == op_start: break
+    
+        start_diff = end_dt - op_start 
+        duration = start_diff.total_seconds() / 3600.            
+        
+        st_y.append(op_start.year)
+        st_m.append(op_start.month)
+        st_d.append(op_start.day)
+        st_h.append(op_start.hour)
+        st_dt.append(op_start)
+        et_dt.append(end_dt)
+        durations.append(duration)
+        
+        break
+                        
+    st_y += weather_windows['start']['year'][i + 1:]
+    st_m += weather_windows['start']['month'][i + 1:]
+    st_d += weather_windows['start']['day'][i + 1:]
+    st_h += weather_windows['start']['hour'][i + 1:]
+    st_dt += weather_windows['start_dt'][i + 1:]
+    et_dt += weather_windows['end_dt'][i + 1:]
+    durations += weather_windows['duration'][i + 1:]
+    
+    new_ww = {}
+        
+    new_ww['start'] = {'year': st_y,
+                       'month': st_m,
+                       'day': st_d,
+                       'hour': st_h}
+    new_ww['start_dt'] = st_dt
+    new_ww['end_dt'] = et_dt
+    new_ww['duration'] = durations
+    
+    return new_ww
+    
+    
+    
