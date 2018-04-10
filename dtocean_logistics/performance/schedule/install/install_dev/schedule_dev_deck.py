@@ -6,13 +6,19 @@ email: boris.teillant@wavec.org; paulo@wavec.org
 This...
 """
 
+
+import math
+import logging
+
 import numpy as np
 import pandas as pd
-import math
 
 from .....phases.select_port import distance
 from .....ancillaries.find import indices
 from .....ancillaries.nanTOzero import nan2zero
+
+# Set up logging
+module_logger = logging.getLogger(__name__)
 
 
 def sched_dev_deck(seq, ind_sol, install, log_phase, site, entry_point, device, sub_device,
@@ -594,6 +600,14 @@ def sched_dev_deck(seq, ind_sol, install, log_phase, site, entry_point, device, 
         journey[jour]['sea_olc'].append(olc)            
         # increment journey
         ind_el = ind_el + nb_el_journey[jour]
+        
+        logMsg = "Phase durations for journey number {}".format(jour)
+        module_logger.debug(logMsg)
+        
+        for op_id, op_dur in zip(op_id_sea_jour[jour], op_dur_sea_jour[jour]):
+            
+            logMsg = "{}: {}".format(op_id, op_dur)
+            module_logger.debug(logMsg)
 
     # add demobilisation time to finalise the logistic phase 
     log_op_demob = log_phase.op_ve[seq].op_seq_demob[0]
