@@ -6,15 +6,15 @@ This module is responsible for the selection of ports for the O&M logistic activ
 
 """
 
-from transit_algorithm import transit_algorithm
-from geopy.distance import great_circle
-import utm
 import math
-
-import os
-from ..configure import get_install_paths
-
 import logging
+
+import utm
+from geopy.distance import great_circle
+
+# from .transit_algorithm import transit_algorithm
+# from ..configure import get_install_paths
+
 module_logger = logging.getLogger(__name__)
 
 
@@ -130,16 +130,41 @@ The OM_port function selects the port used by OM logistic phases
 
         # Feasibility functions
         SP_area = float(lenght_SP) * float(width_SP)
-        SP_loading = float(total_mass_SP) / float(SP_area)
+        SP_loading = float(total_mass_SP) / float(SP_area) / 1000
 
         # terminal load bearing minimum requirement
         port_pd_nan = port_data
         port_data = port_data[port_data['Terminal area [m^2]'] >= SP_area]
         port_data = port_data.append(port_pd_nan[port_pd_nan['Terminal area [m^2]'].isnull()])
 
+        deselected = port_pd_nan[port_pd_nan['Terminal area [m^2]'] < SP_area]
+    
+        if not deselected.empty:
+    
+            port_names = deselected['Name [-]']
+            ports_str = ", ".join(port_names)
+            
+            logMsg = ("The following ports did not meet the 'Terminal area' "
+                      "requirement of {} m^2: {}").format(SP_area, ports_str)
+            module_logger.info(logMsg)
+
         port_pd_nan = port_data
-        port_data = port_data[port_data['Terminal load bearing [t/m^2]'] >= SP_loading/1000] # t/m^2
+        port_data = port_data[port_data['Terminal load bearing [t/m^2]'] >= SP_loading] # t/m^2
         port_data = port_data.append(port_pd_nan[port_pd_nan['Terminal load bearing [t/m^2]'].isnull()])
+
+        deselected = port_pd_nan[
+                    port_pd_nan['Terminal load bearing [t/m^2]'] < SP_loading]
+    
+        if not deselected.empty:
+            
+            port_names = deselected['Name [-]']
+            ports_str = ", ".join(port_names)
+            
+            logMsg = ("The following ports did not meet the 'Terminal load "
+                      "bearing' requirement of {} t/m^2: {}").format(
+                                                                  SP_loading,
+                                                                  ports_str)
+            module_logger.info(logMsg)
 
         port['Port list satisfying the minimum requirements'] = port_data
 

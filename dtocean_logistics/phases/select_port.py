@@ -11,15 +11,14 @@ of two logistic phases (one for the installation module and one for the O&M),
 this will be upgraded for the beta version due to october.
 """
 import math
+import logging
+
 import utm
 from geopy.distance import great_circle
 
-import os
-
-from .transit_algorithm import transit_algorithm
+# from .transit_algorithm import transit_algorithm
 # from ..configure import get_install_paths
 
-import logging
 module_logger = logging.getLogger(__name__)
 
 
@@ -182,9 +181,11 @@ def install_port(device, sub_device,
             if loadout_methd == 'float away':
                 port_data = port_data[port_data[
                             'Type of terminal [Quay/Dry-dock]'] == 'Dry-dock']
+                module_logger.info("Dry-dock type ports selected")
             else:
                 port_data = port_data[port_data[
                             'Type of terminal [Quay/Dry-dock]'] == 'Quay']
+                module_logger.info("Quay type ports selected")
 
             max_dev_area = 0
             for ind_subdev in range(len(sub_device)):
@@ -204,10 +205,38 @@ def install_port(device, sub_device,
     port_data = port_data[ port_data['Terminal load bearing [t/m^2]'] >= port['Terminal load bearing [t/m^2]'] ]
     port_data = port_data.append(port_pd_nan[port_pd_nan['Terminal load bearing [t/m^2]'].isnull()])
 
+    deselected = port_pd_nan[port_pd_nan['Terminal load bearing [t/m^2]'] <
+                                       port['Terminal load bearing [t/m^2]']]
+    
+    if not deselected.empty:
+        
+        port_names = deselected['Name [-]']
+        ports_str = ", ".join(port_names)
+        
+        logMsg = ("The following ports did not meet the 'Terminal load bearing' "
+                  "requirement of {} t/m^2: {}").format(
+                                          port['Terminal load bearing [t/m^2]'],
+                                          ports_str)
+        module_logger.info(logMsg)
+
     port['Terminal area [m^2]'] = float(max_total_area)
     port_pd_nan = port_data
     port_data = port_data[ port_data['Terminal area [m^2]'] >= port['Terminal area [m^2]'] ]
     port_data = port_data.append(port_pd_nan[port_pd_nan['Terminal area [m^2]'].isnull()])
+    
+    deselected = port_pd_nan[port_pd_nan['Terminal area [m^2]'] <
+                                                 port['Terminal area [m^2]']]
+
+    if not deselected.empty:
+
+        port_names = deselected['Name [-]']
+        ports_str = ", ".join(port_names)
+        
+        logMsg = ("The following ports did not meet the 'Terminal area' "
+                  "requirement of {} m^2: {}").format(
+                                          port['Terminal area [m^2]'],
+                                          ports_str)
+        module_logger.info(logMsg)
 
     port['Port list satisfying the minimum requirements'] = port_data
 
