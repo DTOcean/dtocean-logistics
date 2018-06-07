@@ -61,7 +61,7 @@ def install_plan(phase_order, device, layout, collection_point, dynamic_cable,
         # Check if there are any pile foundation/anchor to be installed
         if any(typ == 'pile foundation' for typ in f_type_list) or any(typ == 'pile anchor' for typ in f_type_list):
             # Check if it is a floating or a bottom fixed system
-            if len(line) > 0:
+            if any(typ == 'pile anchor' for typ in f_type_list) and len(line) > 0:
                 # Consider the order defined by the user if any
                 if any(typ == 'Driven' for typ in po_type_list):
                     order_f_d = phase_order['Default Order'].ix['Driven']
@@ -168,7 +168,7 @@ def install_plan(phase_order, device, layout, collection_point, dynamic_cable,
             else:
                 install_plan[order_cp_su] = ['E_cp_surface']
         else:  # cp surface piercing always installed before cables
-            order_cp_su = order_mf
+            order_cp_su = order_mf + 1
             install_plan[order_cp_su].append('E_cp_surface')
         if len(static_cable) > 0 and (any(typ == 'export' for typ in sc_type_list) or any(typ == 'array' for typ in sc_type_list)):
             # Extract list of upstream termination type and ei type
