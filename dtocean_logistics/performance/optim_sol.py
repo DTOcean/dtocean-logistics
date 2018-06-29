@@ -53,8 +53,8 @@ def opt_sol(log_phase, log_phase_id):
         sol_sched_seatransittime = sol['schedule']['transit time']
         sol_sched_seatime = sol['schedule']['sea time_retrieve'] + \
                             sol['schedule']['sea time_replace']
-        sol_sched_waitingtime = sol['schedule']['waiting time_retrieve'] + \
-                                sol['schedule']['waiting time_replace']
+        sol_sched_waitingtime = sum(sol['schedule']['waiting time_retrieve'] \
+                                    + sol['schedule']['waiting time_replace'])
         sol_sched_preptime = sol['schedule']['prep time_retrieve'] + \
                              sol['schedule']['prep time_replace']
         sol_sched_totaltime = sol['schedule']['total time_retrieve'] + \
@@ -66,7 +66,7 @@ def opt_sol(log_phase, log_phase_id):
         sol_sched_seaoptime = sol['schedule']['sea time'] - sol['schedule']['transit time']
         sol_sched_seatransittime = sol['schedule']['transit time']
         sol_sched_seatime = sol['schedule']['sea time']
-        sol_sched_waitingtime = sol['schedule']['waiting time']
+        sol_sched_waitingtime = sum(sol['schedule']['waiting time'])
         sol_sched_preptime = sol['schedule']['prep time']
         sol_sched_totaltime = sol['schedule']['prep time'] + sum(sol['schedule']['waiting time']) + sol['schedule']['sea time']
         sol_sched_nb_journeys = sol['schedule']['global']['nb of journeys']
