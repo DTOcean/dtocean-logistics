@@ -265,7 +265,7 @@ def test_WaitingTime_whole_window_strategy(metocean):
                                                             start_date,
                                                             100)
     assert waiting_time is None
-    assert np.isclose(start_delay, 156)
+    assert np.isclose(start_delay, 50.5)
     
 
 def test_WaitingTime_whole_window_strategy_long(metocean):
@@ -301,8 +301,8 @@ def test_WaitingTime_combined_window_strategy(metocean):
                                                                start_date,
                                                                5000)
     
-    assert start_delay == 27507
-    assert waiting_time == 393
+    assert np.isclose(start_delay, 2179.5)
+    assert np.isclose(waiting_time, 2098.5)
     
     
 def test_WaitingTime_combined_window_strategy_short(metocean):
@@ -354,12 +354,10 @@ def test_WaitingTime_call(mocker, metocean):
     
     sched_sol = {"journey": {0: journey}}
     start_date = dt.datetime(2000, 1, 1)
-    sea_time = 100
     
     journey, exit_flag = test(log_phase,
                               sched_sol,
-                              start_date,
-                              sea_time)
+                              start_date)
     
     assert exit_flag == "WeatherWindowsFound"
     assert 'start_delay' in journey
@@ -396,20 +394,17 @@ def test_WaitingTime_call_twice(mocker, metocean):
     
     sched_sol = {"journey": {0: journey}}
     start_date = dt.datetime(2000, 1, 1)
-    sea_time = 100
     
     journey, exit_flag = test(log_phase,
                               sched_sol,
-                              start_date,
-                              sea_time)
+                              start_date)
     
     assert exit_flag == "WeatherWindowsFound"
     assert 'start_delay' in journey
     
     journey, exit_flag = test(log_phase,
                               sched_sol,
-                              start_date,
-                              sea_time)
+                              start_date)
     
     assert exit_flag == "WeatherWindowsFound"
     assert 'start_delay' in journey
@@ -448,12 +443,10 @@ def test_WaitingTime_call_no_strategy(mocker, metocean):
     
     sched_sol = {"journey": {0: journey}}
     start_date = dt.datetime(2000, 1, 1)
-    sea_time = 500
     
     journey, exit_flag = test(log_phase,
                               sched_sol,
-                              start_date,
-                              sea_time)
+                              start_date)
     
     assert exit_flag == 'NoWWindows'
     assert not journey
@@ -491,12 +484,10 @@ def test_WaitingTime_call_no_windows(mocker, metocean):
     
     sched_sol = {"journey": {0: journey}}
     start_date = dt.datetime(2000, 1, 1)
-    sea_time = 1
     
     journey, exit_flag = test(log_phase,
                               sched_sol,
-                              start_date,
-                              sea_time)
+                              start_date)
         
     assert exit_flag == 'NoWWindows'
     assert not journey
