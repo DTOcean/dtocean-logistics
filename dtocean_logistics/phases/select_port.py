@@ -216,7 +216,7 @@ def install_port(device, sub_device,
         logMsg = ("The following ports did not meet the 'Terminal load bearing' "
                   "requirement of {} t/m^2: {}").format(
                                           port['Terminal load bearing [t/m^2]'],
-                                          ports_str)
+                                          ports_str.encode('utf-8'))
         module_logger.info(logMsg)
 
     port['Terminal area [m^2]'] = float(max_total_area)
@@ -235,7 +235,7 @@ def install_port(device, sub_device,
         logMsg = ("The following ports did not meet the 'Terminal area' "
                   "requirement of {} m^2: {}").format(
                                           port['Terminal area [m^2]'],
-                                          ports_str)
+                                          ports_str.encode('utf-8'))
         module_logger.info(logMsg)
 
     port['Port list satisfying the minimum requirements'] = port_data
