@@ -83,7 +83,7 @@ setup(name='dtocean-logistics',
       install_requires=[
           'geopy',
           'networkx',
-          'matplotlib',
+          'matplotlib<2',
           'numpy',
           'pandas',
           'polite>=0.9',
