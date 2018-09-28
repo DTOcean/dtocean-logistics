@@ -13,7 +13,6 @@ consisting of installation of 1 set of foundations at the time. This will be
 futher developed in the beta version due to October.
 """
 
-import numpy as np
 from dtocean_logistics.load.snap_2_grid import SnapToGrid
 
 
@@ -43,21 +42,12 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
      vessel type of the logistic phase under consideration
     """
 
-    diam_u = []  # list of max diameter per unit
-    load_u = []  # list of loading due to the set of foundation(s) per unit
-    cargo_u = []  # list of cargo due to the set of foundation(s) per unit
-    area_u = []  # list of loading occupied by the set of foundation(s) per unit
-    depth_u = []  # list of water depth by the set of foundation(s) per unit
-    moo_line_len_u = []  # list of mooring line length by the set of foundation(s) per unit
-    moo_mass_u = []  # list of mooring line mass by the set of foundation(s) per unit
-
     snap_to_grid = SnapToGrid(site)
 
     support = sub_device.ix['D'] # corresponds to 'D'
 
     length_ss = support['length [m]']
     width_ss = support['width [m]']
-    height_ss = support['height [m]']
     drymass_ss = support['dry mass [kg]']/1000.0
 
     device_depth = []
@@ -150,15 +140,34 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
                       ['Length [m]', 'sup', 'Terminal length [m]'],
                       ['Max. draft [m]', 'sup', 'Terminal draught [m]']]}
 
-    # feas_m_pe = {'rov': [['Length [m]', 'mul', 'Width [m]', 'plus', 'AE footprint [m^2]', 'sup', 'Terminal area [m^2]'],
-    #           ['AE weight [t]', 'div', 'AE footprint [m^2]', 'sup', 'Deck loading [t/m^2]']]}
     feas_m_pe = {}
 
-    feas_m_ve = {'rov': [['Length [m]', 'mul', 'Width [m]', 'plus', 'AE footprint [m^2]', 'sup', 'Deck space [m^2]'],
-                         ['Weight [t]', 'plus', 'AE weight [t]', 'sup', 'Max. cargo [t]'],
-                         ['Weight [t]', 'div', 'Width [m]', 'div', 'Length [m]', 'sup', 'Deck loading [t/m^2]'],
-                         ['Weight [t]', 'sup', 'AH winch rated pull [t]']]}
+    feas_m_ve = {'rov': [['Length [m]',
+                          'mul',
+                          'Width [m]',
+                          'plus',
+                          'AE footprint [m^2]',
+                          'sup',
+                          'Deck space [m^2]'],
+                         ['Weight [t]',
+                          'plus',
+                          'AE weight [t]',
+                          'sup',
+                          'Max. cargo [t]'],
+                         ['Weight [t]',
+                          'div',
+                          'Width [m]',
+                          'div',
+                          'Length [m]',
+                          'sup',
+                          'Deck loading [t/m^2]'],
+                         ['Weight [t]',
+                          'sup',
+                          'AH winch rated pull [t]']]}
 
 
-    deck_req = {'deck area': deck_area, 'deck cargo': deck_cargo, 'deck loading': deck_loading}
+    deck_req = {'deck area': deck_area,
+                'deck cargo': deck_cargo,
+                'deck loading': deck_loading}
+        
     return feas_e, feas_v, feas_m_pv, feas_m_pe, feas_m_ve, deck_req

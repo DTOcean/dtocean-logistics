@@ -366,11 +366,17 @@ def array_feas(log_phase, log_phase_id, site, static_cable, cable_route,
     return feas_e, feas_v, feas_m_pv, feas_m_pe, feas_m_ve, deck_req
 
 
-def dynamic_feas(log_phase, log_phase_id, site, 
-                 dynamic_cable, connectors):
-    """dynamic_feas is a function which determines the logistic requirement associated 
-    with the one logistic phase dealing with the installation of dynamic cables
+def dynamic_feas(log_phase,
+                 log_phase_id,
+                 site, 
+                 dynamic_cable,
+                 connectors):
+    
+    """dynamic_feas is a function which determines the logistic requirement
+    associated with the one logistic phase dealing with the installation of
+    dynamic cables
     """
+    
     # Input collection --------------------------------------------------------
     dyn_db = dynamic_cable
     site = site
@@ -383,16 +389,10 @@ def dynamic_feas(log_phase, log_phase_id, site,
     dyn_mass = dyn_db['dry mass [kg/m]'].fillna(0)/1000.0
     dyn_total_mass = dyn_db['total dry mass [kg]'].fillna(0)
     dyn_lenght = dyn_db['length [m]'].fillna(0)
-    dyn_diam = dyn_db['diameter [mm]'].fillna(0)/1000.0
     dyn_MBR = dyn_db['MBR [m]'].fillna(0)
     
-    dyn_up_type = dyn_db['upstream termination type [-]']
-    dyn_down_type = dyn_db['downstream termination type [-]']
-    
     dyn_up_ei = dyn_db['upstream ei type [-]']
-    dyn_up_ei_id = dyn_db['upstream ei id [-]']
     dyn_down_ei = dyn_db['downstream ei type [-]']
-    dyn_down_ei_id = dyn_db['downstream ei id [-]']
 
     dyn_wet = dyn_db[dyn_db['upstream ei type [-]'] == 'wet-mate']
     dyn_wet.append(dyn_db[dyn_db['downstream ei type [-]'] == 'wet-mate'])
@@ -416,10 +416,11 @@ def dynamic_feas(log_phase, log_phase_id, site,
         # check the closest point in the site data
         closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
-        site_up = site_up.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
-                           (site['y coord [m]'] == float( closest_point[1] )) & \
-                           (site['zone [-]'] == UTM_zone) ])
-                                       
+        site_up = site_up.append(
+                site[(site['x coord [m]'] == float(closest_point[0])) & \
+                     (site['y coord [m]'] == float(closest_point[1])) & \
+                     (site['zone [-]'] == UTM_zone)])
+    
     depth_up = site_up['bathymetry [m]'].fillna(0)
     depth_up = depth_up.tolist()    
     
@@ -435,9 +436,10 @@ def dynamic_feas(log_phase, log_phase_id, site,
         # check the closest point in the site data
         closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates
-        site_down = site_down.append( site[ (site['x coord [m]'] == float( closest_point[0] )) & \
-                           (site['y coord [m]'] == float( closest_point[1] )) & \
-                           (site['zone [-]'] == UTM_zone) ])
+        site_down = site_down.append(
+                site[(site['x coord [m]'] == float(closest_point[0])) & \
+                     (site['y coord [m]'] == float(closest_point[1])) & \
+                     (site['zone [-]'] == UTM_zone)])
     
     depth_down = site_down['bathymetry [m]'].fillna(0)
     depth_down = depth_down.tolist()
@@ -445,13 +447,13 @@ def dynamic_feas(log_phase, log_phase_id, site,
     # Feasibility functions ---------------------------------------------------
     
     # Vessel
-    deck_area = max( bouyancy_nr*(pi*(bouyancy_diam/2)**2) )
-    deck_cargo =  max( max(dyn_total_mass), max(dyn_lenght*dyn_mass) )
+    deck_area = max(bouyancy_nr*(pi*(bouyancy_diam/2)**2))
+    deck_cargo =  max(max(dyn_total_mass), max(dyn_lenght*dyn_mass))
     deck_loading = 0
-    turntable_load = max( max(dyn_total_mass), max(dyn_lenght*dyn_mass) )
-    turntable_radius = max(dyn_MBR)*2
-    bathymetry = max( max(depth_up), max(depth_down)  )
-    lifting_cap = 3*max( max(depth_up*dyn_mass), max(depth_down*dyn_mass) )
+    turntable_load = max(max(dyn_total_mass), max(dyn_lenght*dyn_mass))
+    turntable_radius = max(dyn_MBR) * 2
+    bathymetry = max(max(depth_up), max(depth_down))
+    lifting_cap = 3 * max(max(depth_up*dyn_mass), max(depth_down*dyn_mass))
     
     # ROV
     if (dyn_up_ei == 'wet-mate').any() or (dyn_down_ei == 'wet-mate').any():
@@ -467,12 +469,16 @@ def dynamic_feas(log_phase, log_phase_id, site,
 
     feas_v = {'CLV': [ ['Deck space [m^2]', 'sup', deck_area],
                        ['Turntable loading [t]', 'sup', turntable_load],
-                       ['Turntable inner diameter [m]', 'sup', turntable_radius],
+                       ['Turntable inner diameter [m]',
+                        'sup',
+                        turntable_radius],
                        ['Crane capacity [t]', 'sup', lifting_cap] ],
 
               'CLB': [ ['Deck space [m^2]', 'sup', deck_area],
                        ['Turntable loading [t]', 'sup', turntable_load],
-                       ['Turntable inner diameter [m]', 'sup', turntable_radius],
+                       ['Turntable inner diameter [m]',
+                        'sup',
+                        turntable_radius],
                        ['Crane capacity [t]', 'sup', lifting_cap] ] }
  
     # Matching ----------------------------------------------------------------
@@ -482,16 +488,33 @@ def dynamic_feas(log_phase, log_phase_id, site,
 
                  'CLB':  [ ['Beam [m]', 'sup', 'Entrance width [m]'],
                            ['Length [m]', 'sup', 'Terminal length [m]'],
-                           ['Max. draft [m]', 'sup', 'Terminal draught [m]'] ] }
+                           ['Max. draft [m]', 'sup', 'Terminal draught [m]'] ]}
     feas_m_pe = {}
 
-    feas_m_ve = {'rov': [ ['Length [m]', 'mul', 'Width [m]', 'plus', 'AE footprint [m^2]', 'sup', 'Deck space [m^2]'],
-                          ['Weight [t]', 'plus', 'AE weight [t]', 'sup', 'Max. cargo [t]'],
-                          ['Weight [t]', 'div', 'Width [m]', 'div', 'Length [m]', 'sup', 'Deck loading [t/m^2]'] ] }
+    feas_m_ve = {'rov': [ ['Length [m]',
+                           'mul',
+                           'Width [m]',
+                           'plus',
+                           'AE footprint [m^2]',
+                           'sup',
+                           'Deck space [m^2]'],
+                          ['Weight [t]',
+                           'plus',
+                           'AE weight [t]',
+                           'sup',
+                           'Max. cargo [t]'],
+                          ['Weight [t]'
+                           'div',
+                           'Width [m]',
+                           'div',
+                           'Length [m]',
+                           'sup',
+                           'Deck loading [t/m^2]'] ] }
 
-    deck_req = {'deck area': deck_area, 'deck cargo': deck_cargo, 'deck loading': deck_loading}
+    deck_req = {'deck area': deck_area,
+                'deck cargo': deck_cargo,
+                'deck loading': deck_loading}
     
-
     return feas_e, feas_v, feas_m_pv, feas_m_pe, feas_m_ve, deck_req
 
     

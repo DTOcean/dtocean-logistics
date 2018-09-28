@@ -285,6 +285,26 @@ def test_WaitingTime_whole_window_strategy_long(metocean):
     assert waiting_time is None
     assert start_delay is None
     
+    
+def test_WaitingTime_whole_window_strategy_max_start_delay(metocean):
+    
+    test = WaitingTime(metocean,
+                       max_start_delay=48)
+    
+    olc = {'maxHs': 4,
+           'maxTp': 15,
+           'maxWs': 15}
+    
+    windows = test.get_weather_windows(olc)
+    start_date = dt.datetime(2000, 12, 25)
+
+    start_delay, waiting_time = test._whole_window_strategy(windows,
+                                                            start_date,
+                                                            100)
+    
+    assert waiting_time is None
+    assert start_delay is None
+    
 
 def test_WaitingTime_combined_window_strategy(metocean):
     
@@ -305,6 +325,45 @@ def test_WaitingTime_combined_window_strategy(metocean):
     assert np.isclose(waiting_time, 2098.5)
     
     
+def test_WaitingTime_combined_window_strategy_leap(metocean):
+    
+    test = WaitingTime(metocean)
+    
+    olc = {'maxHs': 4,
+           'maxTp': 15,
+           'maxWs': 15}
+    
+    windows = test.get_weather_windows(olc)
+    start_date = dt.datetime(2000, 2, 29)
+
+    start_delay, waiting_time = test._combined_window_strategy(windows,
+                                                               start_date,
+                                                               5000)
+    
+    assert np.isclose(start_delay, 1956.0)
+    assert np.isclose(waiting_time, 1745.5)
+    
+    
+def test_WaitingTime_combined_window_strategy_max_start_none(metocean):
+    
+    test = WaitingTime(metocean,
+                       max_start_delay=None)
+    
+    olc = {'maxHs': 4,
+           'maxTp': 15,
+           'maxWs': 15}
+    
+    windows = test.get_weather_windows(olc)
+    start_date = dt.datetime(2000, 1, 1)
+
+    start_delay, waiting_time = test._combined_window_strategy(windows,
+                                                               start_date,
+                                                               5000)
+    
+    assert np.isclose(start_delay, 10257.5)
+    assert np.isclose(waiting_time, 896.0)
+    
+    
 def test_WaitingTime_combined_window_strategy_short(metocean):
     
     test = WaitingTime(metocean)
@@ -321,6 +380,26 @@ def test_WaitingTime_combined_window_strategy_short(metocean):
                                                                100)
     
     assert waiting_time == 0
+
+
+def test_WaitingTime_combined_window_strategy_optimise(metocean):
+    
+    test = WaitingTime(metocean)
+    test.set_optimise_delay(True)
+    
+    olc = {'maxHs': 4,
+           'maxTp': 15,
+           'maxWs': 15}
+    
+    windows = test.get_weather_windows(olc)
+    start_date = dt.datetime(2000, 1, 1)
+
+    start_delay, waiting_time = test._combined_window_strategy(windows,
+                                                               start_date,
+                                                               5000)
+    
+    assert np.isclose(start_delay, 0)
+    assert np.isclose(waiting_time, 5979.0)
 
 
 def test_WaitingTime_call(mocker, metocean):
