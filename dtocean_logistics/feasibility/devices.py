@@ -74,7 +74,9 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
     elif assembly_method == '([A,B,C],D)':
         deck_area = max(sub_device_length['A':'C'] * sub_device_width['A':'C'])
         deck_cargo = sub_device_mass['A':'C'].sum()
-        deck_loading = max(sub_device_mass['A':'C']['A':'C'] / (sub_device_length['A':'C'] * sub_device_width['A':'C']))
+        deck_loading = max(sub_device_mass['A':'C']['A':'C'] /
+                               (sub_device_length['A':'C'] *
+                                                sub_device_width['A':'C']))
     
     # Obtain tow requirements
     if trans_methd == 'deck': # all devices assumed the same
@@ -85,10 +87,11 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
 
     # Equipment and vessel feasiblity ---------------------------------------
     # these should be dictionaries, with the keys being the name of the vessels
-    # and the requirements always a list of lists e.g. 'vessel': [ ['parameter', 'evaluation', value] ]
+    # and the requirements always a list of lists e.g.:
+    #     'vessel': [['parameter', 'evaluation', value]]
 
-    feas_e = {'rov': [ ['Depth rating [m]', 'sup', max_bathymetry],
-                       ['ROV class [-]', 'equal', 'Inspection class'] ]}
+    feas_e = {'rov': [['Depth rating [m]', 'sup', max_bathymetry],
+                      ['ROV class [-]', 'equal', 'Inspection class']]}
 
     feas_v = {'JUP Vessel': [['Deck loading [t/m^2]', 'sup', deck_loading],
                              ['Max. cargo [t]', 'sup', deck_cargo],
@@ -96,21 +99,25 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
                              ['Crane capacity [t]', 'sup', deck_cargo],
                              ['DP [-]', 'sup', 1],
                              ['JackUp max payload [t]', 'sup', deck_cargo],
-                             ['JackUp max water depth [m]', 'sup', max_bathymetry] ],
+                             ['JackUp max water depth [m]',
+                              'sup',
+                              max_bathymetry]],
 
-              'JUP Barge': [ ['Deck loading [t/m^2]', 'sup', deck_loading],
-                             ['Max. cargo [t]', 'sup', deck_cargo],
-                             ['Deck space [m^2]', 'sup', deck_area],
-                             ['Crane capacity [t]', 'sup', deck_cargo],
-                             ['DP [-]', 'sup', 1],
-                             ['JackUp max payload [t]', 'sup', deck_cargo],
-                             ['JackUp max water depth [m]', 'sup', max_bathymetry] ], 
+              'JUP Barge': [['Deck loading [t/m^2]', 'sup', deck_loading],
+                            ['Max. cargo [t]', 'sup', deck_cargo],
+                            ['Deck space [m^2]', 'sup', deck_area],
+                            ['Crane capacity [t]', 'sup', deck_cargo],
+                            ['DP [-]', 'sup', 1],
+                            ['JackUp max payload [t]', 'sup', deck_cargo],
+                            ['JackUp max water depth [m]',
+                             'sup',
+                             max_bathymetry]], 
 
-              'CSV':       [ ['Deck loading [t/m^2]', 'sup', deck_loading],
-                             ['Max. cargo [t]', 'sup', deck_cargo],
-                             ['Deck space [m^2]', 'sup', deck_area],
-                             ['Crane capacity [t]', 'sup', deck_cargo],
-                             ['DP [-]', 'sup', 1] ],
+              'CSV':       [['Deck loading [t/m^2]', 'sup', deck_loading],
+                            ['Max. cargo [t]', 'sup', deck_cargo],
+                            ['Deck space [m^2]', 'sup', deck_area],
+                            ['Crane capacity [t]', 'sup', deck_cargo],
+                            ['DP [-]', 'sup', 1]],
 
               'Crane Barge': [['Deck loading [t/m^2]', 'sup', deck_loading],
                               ['Max. cargo [t]', 'sup', deck_cargo],
@@ -130,30 +137,65 @@ def devices_feas(log_phase, log_phase_id, site, device, sub_device, layout):
 
     feas_m_pv = {'JUP Vessel': [['Beam [m]', 'sup', 'Entrance width [m]'],
                                 ['Length [m]', 'sup', 'Terminal length [m]'],
-                                ['Max. draft [m]', 'sup', 'Terminal draught [m]']
+                                ['Max. draft [m]',
+                                 'sup',
+                                 'Terminal draught [m]']
                               # ['Jacking capability [yes/no]','equal','yes']
                                 ],
                  'CSV':       [['Beam [m]', 'sup', 'Entrance width [m]'],
                                ['Length [m]', 'sup', 'Terminal length [m]'],
-                               ['Max. draft [m]', 'sup', 'Terminal draught [m]']],
+                               ['Max. draft [m]',
+                                'sup',
+                                'Terminal draught [m]']],
 
                  'JUP Barge': [['Beam [m]', 'sup', 'Entrance width [m]'],
                                ['Length [m]', 'sup', 'Terminal length [m]'],
-                               ['Max. draft [m]', 'sup', 'Terminal draught [m]']
-                      # ['Jacking capability [yes/no]','equal','yes']
+                               ['Max. draft [m]',
+                                'sup',
+                                'Terminal draught [m]']
+                              # ['Jacking capability [yes/no]','equal','yes']
                                ],
                  'Tugboat': [['Beam [m]', 'sup', 'Entrance width [m]'],
                              ['Length [m]', 'sup', 'Terminal length [m]'],
-                             ['Max. draft [m]', 'sup', 'Terminal draught [m]']]}
+                             ['Max. draft [m]',
+                              'sup',
+                              'Terminal draught [m]']]}
 
-    feas_m_pe = {'rov': [['length [m]', 'mul', 'width [m]', 'plus', 'AE footprint [m^2]', 'sup', 'Terminal area [m^2]'],
-                         ['AE weight [t]', 'div', 'AE footprint [m^2]', 'sup', 'Deck loading [t/m^2]']]}
+    feas_m_pe = {'rov': [['length [m]',
+                          'mul',
+                          'width [m]',
+                          'plus',
+                          'AE footprint [m^2]',
+                          'sup',
+                          'Terminal area [m^2]'],
+                         ['AE weight [t]',
+                          'div',
+                          'AE footprint [m^2]',
+                          'sup',
+                          'Deck loading [t/m^2]']]}
 
-    feas_m_ve = {'rov': [['Length [m]', 'mul', 'Width [m]', 'plus', 'AE footprint [m^2]', 'sup', 'Deck space [m^2]'],
-                         ['Weight [t]', 'plus', 'AE weight [t]', 'sup', 'Max. cargo [t]'],
-                         ['AE weight [t]', 'div', 'AE footprint [m^2]', 'sup', 'Deck loading [t/m^2]'],
+    feas_m_ve = {'rov': [['Length [m]',
+                          'mul',
+                          'Width [m]',
+                          'plus',
+                          'AE footprint [m^2]',
+                          'sup',
+                          'Deck space [m^2]'],
+                         ['Weight [t]',
+                          'plus',
+                          'AE weight [t]',
+                          'sup',
+                          'Max. cargo [t]'],
+                         ['AE weight [t]',
+                          'div',
+                          'AE footprint [m^2]',
+                          'sup',
+                          'Deck loading [t/m^2]'],
                          ['Weight [t]', 'sup', 'AH winch rated pull [t]']]}
 
 
-    deck_req = {'deck area': deck_area, 'deck cargo': deck_cargo, 'deck loading': deck_loading}
+    deck_req = {'deck area': deck_area,
+                'deck cargo': deck_cargo,
+                'deck loading': deck_loading}
+    
     return feas_e, feas_v, feas_m_pv, feas_m_pe, feas_m_ve, deck_req

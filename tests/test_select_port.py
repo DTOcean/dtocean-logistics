@@ -13,8 +13,8 @@ data_dir = os.path.join(this_dir, "..", "test_data")
 @pytest.fixture(scope="module")
 def foundations():
     
-    metocean_path = os.path.join(data_dir, "foundations.xlsx")
-    df = pd.read_excel(metocean_path)
+    path = os.path.join(data_dir, "foundations.xlsx")
+    df = pd.read_excel(path)
     
     return df
     
