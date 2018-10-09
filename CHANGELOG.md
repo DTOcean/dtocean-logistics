@@ -12,20 +12,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added warning about long waiting times.
 - Added greater logging detail to help understand reasons for failure.
 - Added combined weather window strategy that looks for the combination of
-  windows which has the minimum gaps (now classed as waiting time).
+  windows which has the minimum gaps (now defined as waiting time).
+- If less than three years of metocean data is given it is now copied to
+  simulate a longer time period.
 - Added transit times to maintenance operation scheduling.
 - The sched_om function now accepts a user supplied WaitingTime object using
   the optional custom_waiting argument. This allows a single WaitingTime
   object to be reused between calls.
+- Added a maximum start delay option to WaitingTime class.
 
 ### Changed
 
 - Removed input checks for variables which are not currently used in the code.
 - Updated warnings about operational limits.
-- Weather window calculation (installation) rewritten to remove global
-  variables.
+- Removed global variables in weather window calculation.
 - Reduced the depth of some imports for scheduling functions.
-- Tidied up port load and area requirement test for foundations installation.
+- Tidied up port load and area requirements test for foundations installation.
 - Unified selection of burial technique function for cable lay installation
   phases.
 - Refactored port/vessel/equipment matching code to make it less obscure.
@@ -43,21 +45,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - OLC matching from previous weather window searches now uses a tolerance
   which is set using the match_tolerance argument to WaitingTime. It defaults
   to 0.1.
-  
+- Changed snap_to_grid function to SnapToGrid class for reuse of expensive
+  computation.
+- Now using the journey duration rather than the total duration (including prep
+  time) for weather window selection.
+- Now using the mean start delay rather than the sum of all start delays (from
+  each year of metocean data) to avoid excessive values.
+- The last year of metocean data is no longer searched for an operation start
+  date. This allows at least a year's data to be available for all start dates
+  in the previous year.
 
 ### Fixed
 
 - Fixed some inconsistent definitions of vessel names.
-- Fixed matching of port terminal type
+- Fixed matching of port terminal type.
 - Fixed bug where simulation would stop if any combination of resources could
   not find a weather window.
 - Fixed bug when only using one year of weather data.
 - Fixed bug with jacking time being overestimated.
 - Fixed issue identifying the correct connector IDs for dynamics cables
   maintenance feasibility check.
-- Catch case where OLC conditions generate no weather windows in WaitingTime
+- Caught case where OLC conditions generate no weather windows in WaitingTime
   class.
 - Improved efficiency of logOp_init function by better parsing of dataframe.
+- Fixed bug where mass and area were swapped when calculating loading
+  requirements for gravity foundations.
+- Fixed bug where the device bollard pull was set to its mass rather than the
+  user provided quantity.
+- Fixed bug where the weather window containing the start time would not be
+  selected even if there is enough remaining time to complete the operation.
+- Fixed issue with gravity foundations not being included in the installation
+  plan.
+- The substation pile no longer requires an anchor to be fitted and the
+  substation is installed after the pile.
+- Ensured that the waiting time lists are summed when doing comparisons for
+  finding the optimal solution.
 
 ## [1.0.0] - 2017-01-05
 
