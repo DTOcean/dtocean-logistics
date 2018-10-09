@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
-"""
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
 
+#    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
 This module is part of the characterization step in the WP5 methodology. It 
 contains feasibility functions to compute the minimum logistic requirements to 
 carry out the different logistic phases. This particular modules includes the
@@ -11,6 +24,9 @@ function related to the installation of moorings and foundations.
 BETA VERSION NOTES: The current version is limited to an installation strategy
 consisting of installation of 1 set of foundations at the time. This will be 
 futher developed in the beta version due to October.
+
+.. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
+.. moduleauthor:: Paulo Chainho <paulo@wavec.org>
 """
 
 def MF_feas(log_phase, log_phase_id, layout, line, foundation):
