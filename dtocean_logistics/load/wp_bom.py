@@ -1,8 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
 
+#    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#    Copyright (C) 2017-2018 Mathew Topper
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
 This module imports the upstream data required to run WP5 package. Each function
 contains the data sets of the different WPs. All data imported is translated to
 panda dataframes.
@@ -10,6 +24,10 @@ panda dataframes.
 BETA VERSION NOTES: the module also aims to provide a buffer between the
 database source and WP5 package, so it becomes simple to shift from
 the temporary .xlsx and .csv files to the final SQL solution.
+
+.. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
+.. moduleauthor:: Paulo Chainho <paulo@wavec.org>
+.. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
 
 import pandas as pd

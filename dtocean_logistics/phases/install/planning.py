@@ -1,8 +1,23 @@
 # -*- coding: utf-8 -*-
-"""
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
 
+#    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#    Copyright (C) 2017-2018 Mathew Topper
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# -*- coding: utf-8 -*-
+"""
 This module is responsible for the chronological ordering of the different
 logistic phases during installation. The selection from the user and inputs
 from upstream DTOcean modules build up specific installation sequences.
@@ -10,10 +25,12 @@ This module returns the installation sequence based on either the phase order
 specified by the user or default ordering relying on: type of foundations,
 type of moorings, type of electrical infranstrucutre and the type of devices.
 
+.. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
+.. moduleauthor:: Paulo Chainho <paulo@wavec.org>
+.. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
 
-from ...ancillaries.find import indices
-from ...ancillaries.compare import comp
+from ...ancillaries import comp, indices
 
 
 def install_plan(phase_order, device, layout, collection_point, dynamic_cable,

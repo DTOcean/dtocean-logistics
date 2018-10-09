@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
-"""
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
 
+#    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
 This module governs the definition of the logistic phases. The functions included
 are responsible to initialize and characterize the logistic phases both of the
 installation and O&M modules. The functions return a class of each logistic phase
@@ -11,6 +24,9 @@ characterized in terms of operations sequence and vessel & equipment combination
 BETA VERSION NOTES: In this version, only two logistic phases were characterized,
 one related to Moorings and Foundation Installation: Driven Pile, and another
 related to Operation and Maintenance: Offshore Inspection.
+
+.. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
+.. moduleauthor:: Paulo Chainho <paulo@wavec.org>
 """
 
 from .LpM1 import initialize_LpM1_phase

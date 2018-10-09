@@ -1,8 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-@author: WavEC Offshore Renewables
-email: boris.teillant@wavec.org; paulo@wavec.org
 
+#    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#    Copyright (C) 2017-2018 Mathew Topper
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
 This module is the second and last part of the selection step in the WP5 methodology.
 It contains functions to make the compatibility check between the characteristics
 of port/vessel, port/equipment and vessel/equipment, returning only the feasible
@@ -11,14 +25,19 @@ sequence of the logistic phase.
 
 BETA VERSION DETAILS: up to date, the functionalities explained previously have
 not been implemented, this module should suffer major changes for the beta version
-"""
-import itertools
-import numpy
-import sys
-import math
 
+.. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
+.. moduleauthor:: Paulo Chainho <paulo@wavec.org>
+.. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
+"""
+import math
 import logging
+import itertools
+
+import numpy
+
 module_logger = logging.getLogger(__name__)
+
 
 def compatibility_ve(install, log_phase, port_chosen_data):
     """This function is currently limited to the selection of the first two
