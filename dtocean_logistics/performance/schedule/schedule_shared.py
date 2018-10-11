@@ -158,12 +158,12 @@ class WaitingTime(object):
         add_years = n_years * (n_repeats + 1)
         extra_years = valid_years[:n_extra]
         
-        new_metocean = metocean[metocean["year [-]"].isin(extra_years)]
-        new_metocean["year [-]"] = new_metocean["year [-]"].apply(
-                                                    lambda x: x + add_years)
+        filter_years = metocean["year [-]"].isin(extra_years)
+        new_metocean =  metocean[filter_years].apply(lambda x: x + add_years)
         
         final_metocean = pd.concat([final_metocean, new_metocean],
-                                   ignore_index=True)
+                                   ignore_index=True,
+                                   sort=False)
         
         assert len(final_metocean["year [-]"].unique()) == min_window_years
         
