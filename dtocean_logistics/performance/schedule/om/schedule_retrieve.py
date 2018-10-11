@@ -39,7 +39,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from .....ancillaries import distance, indices, nan2zero
+from ....ancillaries import distance, indices, nan2zero
 
 module_logger = logging.getLogger(__name__)
 
