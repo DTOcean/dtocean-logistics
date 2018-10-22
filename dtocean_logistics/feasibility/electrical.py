@@ -519,7 +519,7 @@ def dynamic_feas(log_phase,
                            'AE weight [t]',
                            'sup',
                            'Max. cargo [t]'],
-                          ['Weight [t]'
+                          ['Weight [t]',
                            'div',
                            'Width [m]',
                            'div',
