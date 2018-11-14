@@ -186,7 +186,10 @@ def install_plan(phase_order, device, layout, collection_point, dynamic_cable,
                 install_plan[order_cp_su] = ['E_cp_surface']
         else:  # cp surface piercing always installed before cables
             order_cp_su = order_mf + 1
-            install_plan[order_cp_su].append('E_cp_surface')
+            if order_cp_su in install_plan:
+                install_plan[order_cp_su].append('E_cp_surface')
+            else:
+                install_plan[order_cp_su] = ['E_cp_surface']
         if len(static_cable) > 0 and (any(typ == 'export' for typ in sc_type_list) or any(typ == 'array' for typ in sc_type_list)):
             # Extract list of upstream termination type and ei type
             sc_ut_list = static_cable['upstream termination type [-]'].tolist()
