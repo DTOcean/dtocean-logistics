@@ -562,8 +562,8 @@ def installation_main(vessels, equipments, ports, phase_order, schedule_OLC,
                     str(round(install['optimal']\
                         ['schedule prep time'], 2)))
                 print ('Solution Schedule waiting time [h]: ' +
-                    str(round(sum(install['optimal']\
-                        ['schedule waiting time']), 2)))
+                    str(round(install['optimal']\
+                        ['schedule waiting time'], 2)))
                 print ('Solution Schedule Sea Operation time [h]: ' +
                     str(round(install['optimal']\
                         ['schedule sea operation time'], 2)))
@@ -573,12 +573,11 @@ def installation_main(vessels, equipments, ports, phase_order, schedule_OLC,
                 print ('Solution Schedule TOTAL time [h]: ' +
                     str(round(
                             install['optimal']['schedule prep time'] +
-                            sum(
-                                install['optimal']\
-                                ['schedule waiting time']) +
-                                install['optimal']\
+                            install['optimal']\
+                                ['schedule waiting time'] +
+                            install['optimal']\
                                 ['schedule sea operation time'] +
-                                install['optimal']\
+                            install['optimal']\
                                 ['schedule sea transit time'], 2)))
 
                 print '- LOGISTICS: '
@@ -623,7 +622,7 @@ def installation_main(vessels, equipments, ports, phase_order, schedule_OLC,
             Installation_total_prep_time += \
                 logistic['TIME']['Preparation Time [h]']
             Installation_total_wait_time += \
-                sum(logistic['TIME']['Waiting Time [h]'])
+                logistic['TIME']['Waiting Time [h]']
             Installation_total_sea_trans_time += \
                 logistic['TIME']['Sea Transit Time [h]']
             Installation_total_sea_op_time += \
