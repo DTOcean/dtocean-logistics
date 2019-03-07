@@ -27,7 +27,7 @@ def simul_plot_bar(outputs, simul_time, log_phase_description):
     ax = mpl_fig.add_subplot(121)
 
     y = [outputs['TIME']['Preparation Time [h]'],
-         outputs['TIME']['Waiting Time [h]'][0],
+         outputs['TIME']['Waiting Time [h]'],
          outputs['TIME']['Sea Transit Time [h]'] + outputs['TIME']['Sea Operation Time [h]']]
     N = 1
     ind = np.arange(N)    # the x locations for the groups
@@ -109,8 +109,7 @@ def simul_plot_bar(outputs, simul_time, log_phase_description):
     log_phase_descript = log_phase_descript.replace("mooring systems with","")
     log_phase_descript = log_phase_descript.replace(" ","_")
     log_phase_descript = log_phase_descript.replace("/","_")
-    plt.savefig( 'Outputs' + '/Fig_Plot_' + log_phase_descript + '.png' )
-    # plt.show()
+    plt.show()
 
     # print 'PLOTBAR FINNISHED!'
 
@@ -123,7 +122,7 @@ def simul_plot_pie(outputs, simul_time, log_phase_description):
     ax = mpl_fig.add_subplot(121)
     labels = 'prep time', 'wait time', 'sea time'
     values = [ 100.0*outputs['TIME']['Preparation Time [h]']/outputs['TIME']['Total Time [h]'],
-         100.0*outputs['TIME']['Waiting Time [h]'][0]/outputs['TIME']['Total Time [h]'],
+         100.0*outputs['TIME']['Waiting Time [h]']/outputs['TIME']['Total Time [h]'],
          100.0*(outputs['TIME']['Sea Transit Time [h]']+outputs['TIME']['Sea Operation Time [h]'])/outputs['TIME']['Total Time [h]'] ]
 
     colors = ['yellowgreen', 'mediumpurple', 'lightskyblue']
@@ -222,8 +221,7 @@ def simul_plot_pie(outputs, simul_time, log_phase_description):
     log_phase_descript = log_phase_descript.replace("mooring systems with","")
     log_phase_descript = log_phase_descript.replace(" ","_")
     log_phase_descript = log_phase_descript.replace("/","_")
-    plt.savefig( 'Outputs' + '/Fig_Pie_' + log_phase_descript + '.png' )
-    # plt.show()
+    plt.show()
 
     return
 
