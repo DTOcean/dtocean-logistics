@@ -19,7 +19,7 @@ skip_commits:
     - dtocean_logistics/config/
 
 # version format
-version: 2.0.0{build}
+version: 2.0.0.build{build}
 
 environment:
   matrix:
