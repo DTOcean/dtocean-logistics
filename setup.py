@@ -66,18 +66,10 @@ class CleanPyc(Command):
 
 
 setup(name='dtocean-logistics',
-      version='1.1.dev1',
+      version='2.0.0',
       description='Logistics module for the DTOcean tools',
-      author=('Paulo Chainho, '
-              'Boris Teillant, '
-              'Pedro Vicente, '
-              'Mathew Topper, '
-              'Adam Collin'),
-      author_email=('paulo@wavec.org, '
-                    'boris.teillant@wavec.org, '
-                    'pedro.vicente@wavec.org, '
-                    'damm_horse@yahoo.co.uk, '
-                    'acollin@staffmail.ed.ac.uk'),
+      maintainer='Mathew Topper',
+      maintainer_email='mathew.topper@dataonlygreater.com',
       license="GPLv3",
       packages=find_packages(),
       install_requires=[
