@@ -62,7 +62,7 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
 
     snap_to_grid = SnapToGrid(site)
 
-    support = sub_device.ix['D'] # corresponds to 'D'
+    support = sub_device.loc['D'] # corresponds to 'D'
 
     length_ss = support['length [m]']
     width_ss = support['width [m]']
@@ -70,9 +70,9 @@ def SS_feas(log_phase, log_phase_id, sub_device, layout, site):
 
     device_depth = []
     for indx_dev, row in layout.iterrows():
-        UTM_elem_x = layout['x coord [m]'].ix[indx_dev]
-        UTM_elem_y = layout['y coord [m]'].ix[indx_dev]
-        UTM_zone = layout['zone [-]'].ix[indx_dev]
+        UTM_elem_x = layout['x coord [m]'].loc[indx_dev]
+        UTM_elem_y = layout['y coord [m]'].loc[indx_dev]
+        UTM_zone = layout['zone [-]'].loc[indx_dev]
         # check the closest point in the site data
         closest_point = snap_to_grid((UTM_elem_x,UTM_elem_y))
         # obtain site data for the coordinates

@@ -79,7 +79,7 @@ def export_feas(log_phase, log_phase_id, site, static_cable, cable_route,
     export_wet.append(export_db[export_db['downstream ei type [-]'] == 'wet-mate'])
     export_connect_id = export_db['upstream ei id [-]']
     export_connect_id.append(export_db['downstream ei id [-]'])
-    export_wet_connect = connect_db.ix[export_connect_id]
+    export_wet_connect = connect_db.loc[export_connect_id]
     
     # Obtain cable route characteristics
     burial_depth = export_route['burial depth [m]']
@@ -252,7 +252,7 @@ def array_feas(log_phase, log_phase_id, site, static_cable, cable_route,
     array_wet.append(array_db[array_db['downstream ei type [-]'] == 'wet-mate'])
     array_connect_id = array_db['upstream ei id [-]']
     array_connect_id.append(array_db['downstream ei id [-]'])
-    array_wet_connect = connect_db.ix[array_connect_id]
+    array_wet_connect = connect_db.loc[array_connect_id]
     
     # Obtain cable route characteristics
     burial_depth = array_route['burial depth [m]']
@@ -414,7 +414,7 @@ def dynamic_feas(log_phase,
     dyn_wet.append(dyn_db[dyn_db['downstream ei type [-]'] == 'wet-mate'])
     wet_connect_id = dyn_wet['upstream ei id [-]']
     wet_connect_id.append(dyn_wet['downstream ei id [-]'])
-    dyn_wet_connect = connect_db.ix[wet_connect_id]
+    dyn_wet_connect = connect_db.loc[wet_connect_id]
 
     bouyancy_nr = dyn_db['buoyancy number [-]'].fillna(0)/1000.0
     bouyancy_diam = dyn_db['buoyancy diameter [mm]'].fillna(0)/1000.0
