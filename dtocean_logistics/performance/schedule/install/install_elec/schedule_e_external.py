@@ -169,7 +169,7 @@ def sched_e_external(seq, ind_sol, install, log_phase, site, entry_point,
         total_nr_mattress = len(stacked_mattress)
         nb_mattress_per_stack = min(mattress_indice)
         nb_mattress_last_stack = total_nr_mattress % nb_mattress_per_stack
-        nb_mattress_stacks = np.ceil( total_nr_mattress/float(nb_mattress_per_stack) )
+        nb_mattress_stacks = int(np.ceil(total_nr_mattress / float(nb_mattress_per_stack)))
         # distribute the indices of the element per stack, into a list of lists
         from_elem = 0
         to_elem = nb_mattress_per_stack
@@ -198,7 +198,7 @@ def sched_e_external(seq, ind_sol, install, log_phase, site, entry_point,
         total_nr_rockbag = len(stacked_rockbag)
         nb_rockbag_per_stack = min(rockbag_indice)
         nb_rockbag_last_stack = total_nr_rockbag % nb_rockbag_per_stack        
-        nb_rockbag_stacks = np.ceil( total_nr_rockbag/float(nb_rockbag_per_stack) )
+        nb_rockbag_stacks = int(np.ceil(total_nr_rockbag / float(nb_rockbag_per_stack)))
         # distribute the indices of the element per stack, into a list of lists
         from_elem = 0
         to_elem = nb_rockbag_per_stack
