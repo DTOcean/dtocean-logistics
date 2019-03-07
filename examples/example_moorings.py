@@ -71,8 +71,6 @@ See also: ...
 """
 
 from os import path
-import sys
-sys.path.append('..')
 import timeit
 
 from dtocean_logistics.load import load_phase_order_data, load_time_olc_data
@@ -83,12 +81,12 @@ from dtocean_logistics.load import load_port_data
 from dtocean_logistics.load.wp_bom import load_user_inputs, load_hydrodynamic_outputs
 from dtocean_logistics.load.wp_bom import load_electrical_outputs, load_MF_outputs
 
-from INSTALLATION_main import installation_main
+from installation_main import installation_main
 from dtocean_logistics.load.input_checkin import input_check
-
 
 # # Set directory paths for loading inputs (@Tecnalia)
 mod_path = path.dirname(path.realpath(__file__))
+
 
 def database_file(file):
     """
@@ -98,17 +96,9 @@ def database_file(file):
     db_path = path.join(mod_path, fpath)
     return db_path
 
-
-
-
-"""
-Load required inputs and database into panda dataframes
-"""
-#default_values inputs
-phase_order = load_phase_order_data(database_file("installation_order.xlsx"))
-schedule_OLC = load_time_olc_data(database_file("operations_time_OLC.xlsx"))
-penet_rates, laying_rates, other_rates = load_eq_rates(database_file("equipment_perf_rates.xlsx"))
-port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
+###
+### Load required inputs and database into panda dataframes
+###
 
 # INPUT options:
 #default_values inputs
@@ -122,22 +112,9 @@ equipments = load_equipment_data(database_file("logisticsDB_equipment_python.xls
 ports = load_port_data(database_file("logisticsDB_ports_python.xlsx"))
 #upstream module inputs/outputs
 site, metocean, device, sub_device, landfall, entry_point = load_user_inputs(database_file("inputs_user.xlsx"))
-# layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic.xlsx"))
 layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic_empty.xlsx"))
-
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_radial_fixed_seabed.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_radial_floating_surface.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_radial_floating_seabed.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_radial_floating_surface.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_star_fixed_seabed.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_star_fixed_surface.xlsx"))
-collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_star_floating_seabed.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("Test_Electrical/outputs_electrical_star_floating_surface.xlsx"))
-
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("ouputs_electrical_empty.xlsx"))
-
-# line, foundation = load_MF_outputs(database_file("outputs_MF.xlsx"))
-line, foundation = load_MF_outputs(database_file("outputs_MF_empty.xlsx"))
+collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("ouputs_electrical_empty.xlsx"))
+line, foundation = load_MF_outputs(database_file("outputs_MF.xlsx"))
 
 # OUTPUT options:
 # *** Print outputs to terminal ***

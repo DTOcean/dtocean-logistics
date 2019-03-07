@@ -71,8 +71,6 @@ See also: ...
 """
 
 from os import path
-import sys
-sys.path.append('..')
 import timeit
 
 from dtocean_logistics.load import load_phase_order_data, load_time_olc_data
@@ -83,12 +81,12 @@ from dtocean_logistics.load import load_port_data
 from dtocean_logistics.load.wp_bom import load_user_inputs, load_hydrodynamic_outputs
 from dtocean_logistics.load.wp_bom import load_electrical_outputs, load_MF_outputs
 
-from INSTALLATION_main import installation_main
+from installation_main import installation_main
 from dtocean_logistics.load.input_checkin import input_check
-
 
 # # Set directory paths for loading inputs (@Tecnalia)
 mod_path = path.dirname(path.realpath(__file__))
+
 
 def database_file(file):
     """
@@ -98,17 +96,9 @@ def database_file(file):
     db_path = path.join(mod_path, fpath)
     return db_path
 
-
-
-
-"""
-Load required inputs and database into panda dataframes
-"""
-#default_values inputs
-phase_order = load_phase_order_data(database_file("installation_order.xlsx"))
-schedule_OLC = load_time_olc_data(database_file("operations_time_OLC.xlsx"))
-penet_rates, laying_rates, other_rates = load_eq_rates(database_file("equipment_perf_rates.xlsx"))
-port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
+###
+### Load required inputs and database into panda dataframes
+###
 
 # INPUT options:
 #default_values inputs
@@ -120,14 +110,12 @@ port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
 vessels = load_vessel_data(database_file("logisticsDB_vessel_python.xlsx"))
 equipments = load_equipment_data(database_file("logisticsDB_equipment_python.xlsx"))
 ports = load_port_data(database_file("logisticsDB_ports_python.xlsx"))
+ports.replace({r'[^\x00-\x7F]+':''}, regex=True, inplace=True)
 #upstream module inputs/outputs
 site, metocean, device, sub_device, landfall, entry_point = load_user_inputs(database_file("inputs_user.xlsx"))
-# layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic.xlsx"))
-layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic_empty.xlsx"))
-# collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("ouputs_electrical.xlsx"))
-collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("ouputs_electrical_empty.xlsx"))
+layout = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic.xlsx"))
+collection_point, dynamic_cable, static_cable, cable_route, connectors, external_protection, topology = load_electrical_outputs(database_file("ouputs_electrical.xlsx"))
 line, foundation = load_MF_outputs(database_file("outputs_MF.xlsx"))
-# line, foundation = load_MF_outputs(database_file("outputs_MF_empty.xlsx"))
 
 # OUTPUT options:
 # *** Print outputs to terminal ***
@@ -137,20 +125,20 @@ PRINT_FLAG = True
 # PLOT_FLAG = True
 PLOT_FLAG = False
 # *** Produce csv ***
-PRINT_CSV = True
-# PRINT_CSV = False
+# PRINT_CSV = True
+PRINT_CSV = False
 cvs_filename = "Outputs/Installation_All.csv"
 # *** Plot Gantt chart ***
 PLOT_GANTT = True
 # PLOT_GANTT = False
 # *** Check Inputs ***
-# CHECK_INPUTS = True
-CHECK_INPUTS = False
+CHECK_INPUTS = True
+# CHECK_INPUTS = False
 
 start_time_ck = timeit.default_timer()
 if CHECK_INPUTS:
     ERROR_IN_INPUT, input_warning_list = input_check(vessels, equipments, ports,
-                                 site, metocean, device, sub_device, landfall,
+                                 site, metocean, device, sub_device, landfall, entry_point,
                                  layout,
                                  collection_point, dynamic_cable, static_cable,
                                  cable_route, connectors, external_protection,
@@ -163,6 +151,8 @@ if CHECK_INPUTS:
         print input_warning_list[indx_error_warn]
 else:
     ERROR_IN_INPUT = False
+
+
 stop_time_ck = timeit.default_timer()
 # print 'Input check simulation time [s]: ' + str(stop_time_ck - start_time_ck) # DEBUG!
 
@@ -185,4 +175,4 @@ if not ERROR_IN_INPUT:
                                             )
     print '-THE END-'
 else:
-     print 'Error in the Inputs!'
+    print 'Error in the Inputs!'

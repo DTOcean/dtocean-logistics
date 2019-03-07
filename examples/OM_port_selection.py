@@ -27,14 +27,9 @@ See also: ...
 """
 
 from os import path
-import os
-import sys
-sys.path.append('..')
-
 
 from dtocean_logistics.load import load_port_data
 from dtocean_logistics.load import load_sf
-from dtocean_logistics.load.wp_bom import load_hydrodynamic_outputs
 from dtocean_logistics.load.wp_bom import load_OM_outputs
 from dtocean_logistics.phases import select_port_OM
 
@@ -49,10 +44,9 @@ def database_file(file):
     db_path = path.join(mod_path, fpath)
     return db_path
 
-
-"""
-Load required inputs and database into panda dataframes
-"""
+###
+### Load required inputs and database into panda dataframes
+###
 
 #default_values inputs
 port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
@@ -61,25 +55,19 @@ port_sf, vessel_sf, eq_sf = load_sf(database_file("safety_factors.xlsx"))
 ports = load_port_data(database_file("logisticsDB_ports_python.xlsx"))
 
 #upstream module inputs/outputs
-#hydrodynamic_outputs = load_hydrodynamic_outputs(database_file("ouputs_hydrodynamic.xlsx"))
-
-
 OM_outputs_PORT = load_OM_outputs(database_file("outputs_OM_Port.xlsx"))
 OM_outputs_INS_PORT = load_OM_outputs(database_file("outputs_OM_INS_PORT.xlsx")) # JUST FOR TESTING!!!
-OM_outputs_OM_PORT = load_OM_outputs(database_file("outputs_OM_PORT.xlsx")) # JUST FOR TESTING!!!
+OM_outputs_OM_PORT = load_OM_outputs(database_file("outputs_OM_Port.xlsx")) # JUST FOR TESTING!!!
 
 # OM_port_choice_input = OM_outputs_PORT
 OM_port_choice_input = OM_outputs_INS_PORT # JUST FOR TESTING!!!
 # OM_port_choice_input = OM_outputs_OM_PORT # JUST FOR TESTING!!!
 
+###
+### Port Selection based on input
+###
 
-
-"""
-Port Selection based on input
-"""
 om_port = select_port_OM.OM_port(OM_port_choice_input, ports)
-
-
 
 print 'Distance port-site [km]: ' + str(om_port['Distance port-site [km]'])
 print 'Port Name: ' + om_port['Selected base port for installation']['Name [-]']
