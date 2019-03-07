@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [2.0.0] - 2019-03-07
 
 ### Added
 
@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   substation is installed after the pile.
 - Ensured that the waiting time lists are summed when doing comparisons for
   finding the optimal solution.
+- Fix bug with number of mattresses and rock bags being floats rather than ints.
+- Fix example plotting bugs.
 
 ## [1.0.0] - 2017-01-05
 
