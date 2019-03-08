@@ -28,7 +28,7 @@ Distribution](https://www.anaconda.com/distribution/) (Python 2.7)
 To install:
 
 ```
-$ conda install -c dataonlygreater dtocean-logistics
+$ conda install -c defaults -c conda-forge -c dataonlygreater dtocean-logistics
 ```
 
 ### Source Code
