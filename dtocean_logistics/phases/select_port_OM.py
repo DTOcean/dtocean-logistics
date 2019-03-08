@@ -163,8 +163,9 @@ The OM_port function selects the port used by OM logistic phases
             port_names = deselected['Name [-]']
             ports_str = ", ".join(port_names)
             
-            logMsg = ("The following ports did not meet the 'Terminal area' "
-                      "requirement of {} m^2: {}").format(SP_area, ports_str)
+            logMsg = (u"The following ports did not meet the 'Terminal area' "
+                      "requirement of {} m^2: "
+                      "{}").format(SP_area, ports_str).encode('utf-8')
             module_logger.info(logMsg)
 
         port_pd_nan = port_data
