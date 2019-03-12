@@ -1,6 +1,6 @@
 [![appveyor](https://ci.appveyor.com/api/projects/status/github/DTOcean/dtocean-logistics?branch=master&svg=true)](https://ci.appveyor.com/project/DTOcean/dtocean-logistics)
 [![codecov](https://codecov.io/gh/DTOcean/dtocean-logistics/branch/master/graph/badge.svg)](https://codecov.io/gh/DTOcean/dtocean-logistics)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/bb34506cc82f4df883178a6e64619eaf)](https://www.codacy.com/project/H0R5E/dtocean-logistics/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DTOcean/dtocean-logistics&amp;utm_campaign=Badge_Grade_Dashboard&amp;branchId=8410911)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/69159a2b4c944b4c9d85046ecffa5317)](https://www.codacy.com/project/H0R5E/dtocean-logistics/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DTOcean/dtocean-logistics&amp;utm_campaign=Badge_Grade_Dashboard&amp;branchId=11717144)
 [![release](https://img.shields.io/github/release/DTOcean/dtocean-logistics.svg)](https://github.com/DTOcean/dtocean-logistics/releases/latest)
 
 # DTOcean Logistics Module
@@ -37,7 +37,7 @@ Conda can be used to install dependencies into a dedicated environment from
 the source code root directory:
 
 ```
-conda create -n _dtocean_logis python=2.7 pip
+$ conda create -n _dtocean_logis python=2.7 pip
 ```
 
 Activate the environment, then copy the `.condrc` file to store installation  
@@ -114,8 +114,8 @@ $ conda remove --name _dtocean_logis --all
 Example scripts are available in the "examples" folder of the source code.
 
 ```
-cd examples
-python example.py
+$ cd examples
+$ python example.py
 ```
 
 ## Contributing
