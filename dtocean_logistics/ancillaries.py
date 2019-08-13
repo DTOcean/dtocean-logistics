@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #    Copyright (C) 2016 Boris Teillant
-#    Copyright (C) 2017-2018 Mathew Topper
+#    Copyright (C) 2017-2019 Mathew Topper
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ Created on Wed Jan 27 10:10:16 2016
 .. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
 .. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
+
+from bisect import bisect_right
 
 import utm
 import numpy as np
@@ -98,8 +100,27 @@ def indices(a, func):
     Returns the indices of a vector "a" that satisfy the conditional function
     "func"
     """
-
+    
     return [i for (i, val) in enumerate(a) if func(val)]
+
+
+def indices_gtoet(a, value):
+    
+    indices = []
+    
+    for i, val in enumerate(a):
+        if val >= value:
+            indices.append(i)
+        
+    return indices
+
+
+def indices_mono_gtoet(a, value):
+    
+    x = bisect_right(a, value)
+    result = range(x - 1, len(a))
+    
+    return result
 
 
 def nan2zero(a):

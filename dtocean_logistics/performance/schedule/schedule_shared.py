@@ -33,7 +33,7 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
-from ...ancillaries import indices
+from ...ancillaries import indices, indices_gtoet, indices_mono_gtoet
 
 # Start the logger
 module_logger = logging.getLogger(__name__)
@@ -337,10 +337,11 @@ class WaitingTime(object):
     @classmethod
     def _get_whole_windows(cls, weather_windows, start_date_met, sea_time):
         
-        ind_ww_sd = indices(weather_windows['start_dt'],
-                                lambda x: x >= start_date_met)
-        ind_ww_dur = indices(weather_windows['duration'],
-                             lambda y: y >= sea_time)
+        ind_ww_sd = indices_mono_gtoet(weather_windows['start_dt'],
+                                       start_date_met)
+        ind_ww_dur = indices_gtoet(weather_windows['duration'],
+                                   sea_time)
+        
         ind_ww_all = set(ind_ww_sd).intersection(ind_ww_dur)
         
         return list(ind_ww_all)
