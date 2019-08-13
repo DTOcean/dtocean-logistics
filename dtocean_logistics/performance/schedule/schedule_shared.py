@@ -68,25 +68,25 @@ class WaitingTime(object):
         year_groups = metocean.groupby('year [-]')
         
         valid_years = []
-
+        
         for year, df in year_groups:
             
             if not ((df["month [-]"] == 1) &
                     (df["day [-]"] == 1) &
                     (df["hour [-]"] == 0)).any(): continue
-                    
+            
             if not ((df["month [-]"] == 12) &
                     (df["day [-]"] == 31) &
                     (df["hour [-]"] == (24 - median_step))).any(): continue
-                    
-            valid_years.append(year)
             
+            valid_years.append(year)
+        
         if not valid_years:
             
             errStr = ("No complete years for weather window calculation were "
                       "found in metocean data")
             raise ValueError(errStr)
-            
+        
         missing_years = set(year_groups.groups.keys()) - set(valid_years)
         
         if missing_years:
@@ -101,7 +101,7 @@ class WaitingTime(object):
         # Check that the years are monotonic
         valid_years_iter = iter(valid_years)
         first_year = next(valid_years_iter)
-    
+        
         if not all(a == b for a, b in enumerate(valid_years_iter,
                                                 first_year + 1)):
             
@@ -110,7 +110,7 @@ class WaitingTime(object):
             errStr = ("Valid years in metocean data are not monotonic. Found: "
                       "{}").format(valid_str)
             raise ValueError(errStr)
-                        
+        
         final_metocean = metocean[metocean["year [-]"].isin(valid_years)]
         final_metocean = final_metocean.reset_index()
         
@@ -134,7 +134,7 @@ class WaitingTime(object):
             msgStr = "Repeating valid metocean data {} time(s)".format(
                                                                     n_repeats)
             module_logger.info(msgStr)
-
+        
         for i in xrange(n_repeats):
             
             add_years = n_years * (i + 1)
@@ -144,13 +144,12 @@ class WaitingTime(object):
             
             final_metocean = pd.concat([final_metocean, new_metocean],
                                        ignore_index=True)
-            
-            
+        
         if n_extra == 0:
             assert len(final_metocean["year [-]"].unique()) == \
                                                             min_window_years
             return final_metocean
-            
+        
         # Add extra years
         msgStr = "Copying {} year(s) from valid metocean data".format(n_extra)
         module_logger.info(msgStr)
@@ -847,6 +846,7 @@ def is_leap_year(year):
         result = False
     
     return result
+
 
 def trim_weather_windows(weather_windows, op_start):
     
