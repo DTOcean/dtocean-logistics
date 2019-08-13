@@ -26,6 +26,7 @@ import math
 import timeit
 import logging
 import datetime as dt
+from bisect import bisect_left
 from operator import itemgetter
 from itertools import groupby
 from collections import OrderedDict
@@ -852,8 +853,7 @@ def trim_weather_windows(weather_windows, op_start):
     
     # Edge case with no weather windows earlier than the op_start
     if weather_windows['start_dt'][0] >= op_start: return weather_windows
-        
-    i = 0
+    
     st_y = []
     st_m = []
     st_d = []
@@ -862,19 +862,13 @@ def trim_weather_windows(weather_windows, op_start):
     et_dt = []
     durations = []
     
-    while i < len(weather_windows['end_dt']):
+    i = bisect_left(weather_windows['end_dt'], op_start)
+    end_dt = weather_windows['end_dt'][i]
         
-        end_dt = weather_windows['end_dt'][i]
-        
-        if end_dt < op_start:
-            
-            i += 1
-            continue
-        
-        if end_dt == op_start: break
-    
-        start_diff = end_dt - op_start 
-        duration = start_diff.total_seconds() / 3600.            
+    if end_dt != op_start:
+
+        start_diff = end_dt - op_start
+        duration = start_diff.total_seconds() / 3600.
         
         st_y.append(op_start.year)
         st_m.append(op_start.month)
@@ -883,9 +877,7 @@ def trim_weather_windows(weather_windows, op_start):
         st_dt.append(op_start)
         et_dt.append(end_dt)
         durations.append(duration)
-        
-        break
-                        
+    
     st_y += weather_windows['start']['year'][i + 1:]
     st_m += weather_windows['start']['month'][i + 1:]
     st_d += weather_windows['start']['day'][i + 1:]
