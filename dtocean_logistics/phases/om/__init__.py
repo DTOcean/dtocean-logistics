@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #    Copyright (C) 2016 Boris Teillant, Paulo Chainho
+#    Copyright (C) 2019 Mathew Topper
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -27,6 +28,7 @@ related to Operation and Maintenance: Offshore Inspection.
 
 .. moduleauthor:: Boris Teillant <boris.teillant@wavec.org>
 .. moduleauthor:: Paulo Chainho <paulo@wavec.org>
+.. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
 
 from .LpM1 import initialize_LpM1_phase
@@ -39,7 +41,18 @@ from .LpM7 import initialize_LpM7_phase
 from .LpM8 import initialize_LpM8_phase
 
 
-def logPhase_om_init(log_op, vessels, equipments, om):
+LOGPHASE_CONFIG_MAP = {'LpM1': initialize_LpM1_phase,
+                       'LpM2': initialize_LpM2_phase,
+                       'LpM3': initialize_LpM3_phase,
+                       'LpM4': initialize_LpM4_phase,
+                       'LpM5': initialize_LpM5_phase,
+                       'LpM6': initialize_LpM6_phase,
+                       'LpM7': initialize_LpM7_phase,
+                       'LpM8': initialize_LpM8_phase
+                       }
+
+
+def logPhase_om_init(log_phase_id, log_op, vessels, equipments, om):
     """This function initializes and characterizes all logistic phases associated
     with the installation module. The first step uses LogPhase class to initialize
     each class with a key ID and description, the second step uses the DefPhase
@@ -54,41 +67,26 @@ def logPhase_om_init(log_op, vessels, equipments, om):
      3rd digit: component/sub-system type - differ depending on the logistic phase
      4th digit: method (level 1) - differ depending on the logistic phase
      5th digit: sub-method (level 2) - differ depending on the logistic phase
-
+    
     Parameters
     ----------
+    log_phase_id: 
+        the required log phase
     log_op : dict
      dictionnary containing all classes defining the individual logistic operations
     vessels : DataFrame
      Panda table containing the vessel database
     equipments : DataFrame
      Panda table containing the equipment database
-
+    
     Returns
     -------
     logPhase_om : dict
      dictionnary containing all classes defining the logistic phases for operation and maintenance
     """
-
-    # 1st Level - Initialize the logistic phases through LogPhase classes
-
-    # TO BE CHANGED IN ORDER TO ONLY INITIALISE THE PHASES THAT ARE REQUESTED ACCORDING TO THE INSTALLATION PLAN (AND/OR OPERATION SEQUENCE)
-    logPhase_om = {'LpM1': initialize_LpM1_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM2': initialize_LpM2_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM3': initialize_LpM3_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM4': initialize_LpM4_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM5': initialize_LpM5_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM6': initialize_LpM6_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM7': initialize_LpM7_phase(log_op, vessels, equipments,
-                                                 om),
-                   'LpM8': initialize_LpM8_phase(log_op, vessels, equipments,
-                                                 om),
-                   }
-
-    return logPhase_om
+    
+    # Returns a configured LogPhase class
+    log_phase_configurator = LOGPHASE_CONFIG_MAP[log_phase_id]
+    log_phase = log_phase_configurator(log_op, vessels, equipments, om)
+    
+    return log_phase
