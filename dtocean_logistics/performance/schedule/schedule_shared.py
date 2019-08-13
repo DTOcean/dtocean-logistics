@@ -641,7 +641,8 @@ class WaitingTime(object):
         
         start_delays = []
         wait_times = []
-                
+        result = {}
+        
         # loop over the number of vessel journeys
         for journey in sched_sol['journey'].itervalues():
             
@@ -793,10 +794,10 @@ class WaitingTime(object):
                                                       log_phase.description,
                                                       wait_time))
     
-        journey['start_delay'] = start_delays
-        journey['wait_dur'] = wait_times
+        result['start_delay'] = start_delays
+        result['wait_dur'] = wait_times
         
-        return journey, 'WeatherWindowsFound'
+        return result, 'WeatherWindowsFound'
 
 
 def get_window_indexes(WW_bin, time_step):

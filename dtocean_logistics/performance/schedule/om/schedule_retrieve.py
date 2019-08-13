@@ -234,13 +234,13 @@ def sched_retrieve(log_phase_id, seq, ind_sol, log_phase, site, device,
             # discriminate between the time assessment methods
             if not pd.isnull(time_method[0]):  # direct time value method
                 if log_op_prep.description == "Vessel preparation & loading": # CHANGED TO WP6 INPUT!!
-                    log_op_prep.time_value = om['Prep_time [h]'][0]
-                    op_dur_prep.append(log_op_prep.time_value)
+                    temp_time_value = om['Prep_time [h]'][0]
+                    op_dur_prep.append(temp_time_value)
                     op_id_prep.append(log_op_prep.description)
                     op_id_prep_jour[jour].append(log_op_prep.description)
-                    op_dur_prep_jour[jour].append(log_op_prep.time_value)
+                    op_dur_prep_jour[jour].append(temp_time_value)
                     journey[jour]['prep_id'].append(log_op_prep.description)
-                    journey[jour]['prep_dur'].append(log_op_prep.time_value)
+                    journey[jour]['prep_dur'].append(temp_time_value)
                 else:
                     msg = ("Unknown default value time value duration for "
                            "this logistic operation associated with the "
