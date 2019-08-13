@@ -47,6 +47,7 @@ class WaitingTime(object):
                        max_start_delay=8760):
         
         self.metocean = self._init_years(metocean, min_window_years)
+        self._unique_years = self.metocean['year [-]'].unique()[:-1]
         self._match_tol = match_tolerance
         self._max_start_delay = max_start_delay
         self._optimise_delay = False
@@ -430,15 +431,12 @@ class WaitingTime(object):
         
         mean_delay = None
         waiting_time = None
-        
-        # Get the years of metocean data excluding the last
-        years = self.metocean['year [-]'].unique()[:-1]
 
         start_delays = []
         
         # Attempt to find whole weather windows, starting in each year of the
         # metocean data and then calculate the mean start delay
-        for i, year in enumerate(years):
+        for i, year in enumerate(self._unique_years):
             
             # Set the year to match metocean data and avoid reaching the 29th
             # of February in a 366 days year
@@ -524,13 +522,10 @@ class WaitingTime(object):
         start_delays = []
         waiting_times = []
         
-        # Get the years of metocean data excluding the last
-        years = self.metocean['year [-]'].unique()[:-1]
-        
         # Attempt to groups of weather windows covering the operation
         # duration, starting in each year of the metocean data and then
         # calculate the mean start delay and waiting time
-        for i, year in enumerate(years):
+        for i, year in enumerate(self._unique_years):
         
             # Set the year to match metocean data and avoid reaching the 29th
             # of February in a 366 days year
