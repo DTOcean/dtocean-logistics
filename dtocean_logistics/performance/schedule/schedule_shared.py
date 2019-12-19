@@ -181,14 +181,14 @@ class WaitingTime(object):
         weather windows found in the met-ocean data for the given operational
         limit conditions (olc)
         """
-    
+        
         # Initialisation
         ww = {}
-    
+        
         # Operational limit conditions (consdiered static over the entire
         # duration of the marine operation)
         median_step = self.metocean["hour [-]"].diff().median()
-            
+        
         windowStr = "No weather windows were found for operational condition: "
         durationStr = ("Short durations (<8 hours) detected for operational "
                        "condition: ")
@@ -201,25 +201,25 @@ class WaitingTime(object):
         else:
             Hs_bin = [1] * len(self.metocean['Hs [m]'])
             olc['maxHs'] = max(self.metocean['Hs [m]'])
-            
+        
         if 'maxTp' in olc and olc['maxTp'] > 0:
             Tp_bin = map(float, self.metocean['Tp [s]'] < olc['maxTp'])
         else:
             Tp_bin = [1] * len(self.metocean['Tp [s]'])
             olc['maxTp'] = max(self.metocean['Tp [s]'])
-            
+        
         if 'maxWs' in olc and olc['maxWs'] > 0:
             Ws_bin = map(float, self.metocean['Ws [m/s]'] < olc['maxWs'])
         else:
             Ws_bin = [1] * len(self.metocean['Ws [m/s]'])
             olc['maxWs'] = max(self.metocean['Ws [m/s]'])
-            
+        
         if 'maxCs' in olc and olc['maxCs'] > 0:
             Cs_bin = map(float, self.metocean['Cs [m/s]'] < olc['maxCs'])
         else:
             Cs_bin = [1] * len(self.metocean['Cs [m/s]'])
             olc['maxCs'] = max(self.metocean['Cs [m/s]'])
-
+        
         # Convert to numpy arrays and test for no windows and exit
         Hs_bin = np.array(Hs_bin)
         oppStr = "maxHs < {}".format(olc['maxHs'])
@@ -283,7 +283,7 @@ class WaitingTime(object):
         
         # Combine the windows
         WW_bin = np.logical_and.reduce((Hs_bin, Tp_bin, Ws_bin, Cs_bin))
-
+        
         # No combined weather windows exit the function
         if not WW_bin.any():
             
@@ -296,10 +296,10 @@ class WaitingTime(object):
             module_logger.warning(logStr)
             
             return ww
-    
+        
         # Determine the starting index and the durations of the weather windows
         windows = get_window_indexes(WW_bin, median_step)
-    
+        
         st_y = []
         st_m = []
         st_d = []
@@ -357,7 +357,7 @@ class WaitingTime(object):
         if start_delay < 0:
             errStr = "Start of window is before requested start date"
             raise RuntimeError(errStr)
-            
+        
         return start_delay
     
     @classmethod
@@ -367,24 +367,24 @@ class WaitingTime(object):
         window_durations = []
         window_gaps = []
         last_end = None
-
+        
         for idx in idx_ww_sd:
             
             delta_st = weather_windows['start_dt'][idx] - start_date_met
             delay = int(delta_st.total_seconds()) / 3600
             
             duration = weather_windows['duration'][idx]
-                        
+            
             window_delays.append(delay)
             window_durations.append(duration)
-
+            
             delta_et = weather_windows['end_dt'][idx] - start_date_met
             end = int(delta_et.total_seconds()) / 3600
             
             if last_end is None:
                 last_end = end
                 continue
-                
+            
             gap = end - last_end
             last_end = end
 
@@ -423,7 +423,7 @@ class WaitingTime(object):
             
             delays.append(delay)
             wait_times.append(wait_time)
-            
+        
         return delays, wait_times
     
     def _whole_window_strategy(self, weather_windows,
@@ -432,7 +432,7 @@ class WaitingTime(object):
         
         mean_delay = None
         waiting_time = None
-
+        
         start_delays = []
         
         # Attempt to find whole weather windows, starting in each year of the
@@ -449,24 +449,24 @@ class WaitingTime(object):
                                              3,
                                              1,
                                              start_date.hour)
-                
+            
             else:
                 
                 start_date_met = dt.datetime(year,
                                              start_date.month,
                                              start_date.day,
                                              start_date.hour)
-
+            
             # Trim the windows to the operation start
             trimmed_windows = trim_weather_windows(weather_windows,
                                                    start_date_met)
                 
             # Look for indexes of weather windows starting after the given
-            # start date                        
+            # start date
             ind_ww_all = self._get_whole_windows(trimmed_windows,
                                                  start_date_met,
                                                  sea_time)
-                    
+            
             if not ind_ww_all:
                 
                 date_format = lambda x: "{:%d-%b %H:%M}".format(x)
@@ -481,7 +481,7 @@ class WaitingTime(object):
                 module_logger.warning(logStr)
                 
                 return mean_delay, waiting_time
-                                
+            
             # Find the index of the first suitable weather window
             ind_ww_first = min(ind_ww_all)
             
@@ -489,7 +489,7 @@ class WaitingTime(object):
             start_delay = self._get_start_delay(trimmed_windows,
                                                 start_date_met,
                                                 ind_ww_first)
-                            
+            
             # If the start delay exceeds the maximum then abort the strategy
             if (self._max_start_delay is not None and
                 start_delay > self._max_start_delay):
@@ -510,10 +510,10 @@ class WaitingTime(object):
                 return mean_delay, waiting_time
             
             start_delays.append(start_delay)
-                                
+        
         if start_delays:
             mean_delay = np.array(start_delays).mean()
-            
+        
         return mean_delay, waiting_time
     
     def _combined_window_strategy(self, weather_windows,
@@ -527,7 +527,7 @@ class WaitingTime(object):
         # duration, starting in each year of the metocean data and then
         # calculate the mean start delay and waiting time
         for i, year in enumerate(self._unique_years):
-        
+            
             # Set the year to match metocean data and avoid reaching the 29th
             # of February in a 366 days year
             if (not is_leap_year(year) and
@@ -538,14 +538,14 @@ class WaitingTime(object):
                                              3,
                                              1,
                                              start_date.hour)
-                
+            
             else:
                 
                 start_date_met = dt.datetime(year,
                                              start_date.month,
                                              start_date.day,
                                              start_date.hour)
-                
+            
             # Trim the windows to the operation start
             trimmed_windows = trim_weather_windows(weather_windows,
                                                    start_date_met)
@@ -622,12 +622,12 @@ class WaitingTime(object):
                     
             start_delays.append(start_delay)
             waiting_times.append(waiting_time)
-            
+        
         mean_start_delay = sum(start_delays) / float(len(start_delays))
         mean_waiting_time = sum(waiting_times) / float(len(waiting_times))
         
         return mean_start_delay, mean_waiting_time
-                
+    
     def __call__(self, log_phase, sched_sol, start_date):
         
         """
@@ -655,7 +655,7 @@ class WaitingTime(object):
                    'maxTp': [],
                    'maxWs': [],
                    'maxCs': []}
-                        
+            
             for op_name, op_sea in zip(journey['sea_id'], journey['sea_olc']):
                 
                 olcMsgs = ["{}: {}".format(cond, op_sea_olc)
@@ -664,7 +664,7 @@ class WaitingTime(object):
                 logMsg = ("Checking limit conditions for phase '{}': "
                           "{}").format(op_name, olcMsg)
                 module_logger.info(logMsg)
-                                
+                
                 for i, name in enumerate(olc_names):
                     
                     op_sea_olc = op_sea[i]
@@ -675,7 +675,7 @@ class WaitingTime(object):
                     
                     # Append OLC values
                     olc[name].append(op_sea_olc)
-                        
+            
             # Extract the most restrictive OLC of the sea operation 
             if any(olc_hs > 0 for olc_hs in olc['maxHs']):
                 olc['maxHs'] = min(i for i in olc['maxHs'] if i > 0)
@@ -686,42 +686,42 @@ class WaitingTime(object):
                 olc['maxTp'] = min(i for i in olc['maxTp'] if i > 0)
             else:
                 olc['maxTp'] = 0
-                
+            
             if any(olc_ws > 0 for olc_ws in olc['maxWs']):
                 olc['maxWs'] = min(i for i in olc['maxWs'] if i > 0)
             else:
                 olc['maxWs'] = 0
-                
+            
             if any(olc_cs > 0 for olc_cs in olc['maxCs']):
                 olc['maxCs'] = min(i for i in olc['maxCs'] if i > 0)
             else:
                 olc['maxCs'] = 0
-    
+            
             # Return phase OLC
             msg = []
-    
+            
             if olc['maxHs'] > 0:
                 msg.append("Significant wave height: {}m".format(olc['maxHs']))
-    
+            
             if olc['maxTp'] > 0:
                 msg.append("Peak period: {}s".format(olc['maxTp']))
-    
+            
             if olc['maxWs'] > 0:
                 msg.append("Maximum wind speed: {}s".format(olc['maxWs']))
-    
+            
             if olc['maxCs'] > 0:
                 msg.append("Maximum current speed: {}s".format(olc['maxCs']))
-    
+            
             msg_str = ', '.join(msg)
             module_logger.info("Combined operational limit for phase {}: "
                                "{}".format(log_phase.description, msg_str))
-    
+            
             # start_time = timeit.default_timer()      ## TIME ASSESSMENT
             
             # See if the same weather windows have been calculated and stored
             # before
             weather_wind = None
-    
+            
             for ww_dict in self._olc_ww:
                 
                 ww_olc = ww_dict['olc']
@@ -740,9 +740,9 @@ class WaitingTime(object):
             
             # OLC conditions allow no weather windows
             if not weather_wind: return [], 'NoWWindows'
-                    
+            
             # stop_time = timeit.default_timer()  # TIME ASSESSMENT
-    
+            
             # Start looking for whole weather windows in the metocean data
             # unless self._optimise_delay is True
             msgStr = ("Creating logistics plan for operation length {} hours "
@@ -769,7 +769,7 @@ class WaitingTime(object):
                                                          weather_wind,
                                                          start_date,
                                                          sea_time)
-                
+            
             if start_delay is not None:
                 
                 start_delays.append(start_delay)
@@ -779,9 +779,9 @@ class WaitingTime(object):
                                           "{}: {} hours".format(
                                                       log_phase.description,
                                                       start_delay))
-                
+            
             else:
-    
+                
                 return [], 'NoWWindows'
             
             if wait_time is not None:
@@ -793,7 +793,7 @@ class WaitingTime(object):
                                           "{}: {} hours".format(
                                                       log_phase.description,
                                                       wait_time))
-    
+        
         result['start_delay'] = start_delays
         result['wait_dur'] = wait_times
         
@@ -804,10 +804,10 @@ def get_window_indexes(WW_bin, time_step):
     
     """Return starting index and duration of window as keys and values of
     an ordered dictionary"""
-        
+    
     WW_authorized = indices(WW_bin, lambda x: x == 1)
     window_groups = get_groups(WW_authorized)
-
+    
     windows = OrderedDict()
     
     for group in window_groups:
@@ -816,7 +816,7 @@ def get_window_indexes(WW_bin, time_step):
         
         # Don't allow 0 length windows
         if duration == 0: continue
-    
+        
         start_index = group[0]
         duration = duration * time_step
         
@@ -831,13 +831,13 @@ def get_groups(data):
     
     for k, g in groupby(enumerate(data), lambda (i, x): i - x):
         groups.append(map(itemgetter(1), g))
-        
+    
     return groups
 
 
 def is_leap_year(year):
     
-    if (((year % 4 == 0) and (year % 100 != 0)) or 
+    if (((year % 4 == 0) and (year % 100 != 0)) or
         (year % 400 == 0)):
         result = True
     else:
@@ -888,7 +888,7 @@ def trim_weather_windows(weather_windows, op_start):
     durations += weather_windows['duration'][i + 1:]
     
     new_ww = {}
-        
+    
     new_ww['start'] = {'year': st_y,
                        'month': st_m,
                        'day': st_d,
