@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #    Copyright (C) 2016 Boris Teillant, Paulo Chainho
-#    Copyright (C) 2017-2018 Mathew Topper
+#    Copyright (C) 2017-2019 Mathew Topper
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -307,7 +307,13 @@ class WaitingTime(object):
         st_dt = []
         et_dt = []
         durations = []
-
+        cum_durations = []
+        cum_gaps = []
+        
+        total_durations = 0.
+        total_gaps = 0.
+        last_end_datetime = None
+        
         for ind_dt, duration in windows.iteritems():
             
             year = self.metocean['year [-]'][ind_dt]
@@ -317,6 +323,14 @@ class WaitingTime(object):
             
             start_datetime = dt.datetime(year, month, day, hour)
             end_datetime = start_datetime + dt.timedelta(hours=int(duration))
+            total_durations += duration
+            
+            if last_end_datetime is not None:
+                gap_delta = start_datetime - last_end_datetime
+                gap_hours = int(gap_delta.total_seconds()) / 3600
+                total_gaps += gap_hours
+            
+            last_end_datetime = end_datetime
             
             st_y.append(year)
             st_m.append(month)
@@ -325,7 +339,9 @@ class WaitingTime(object):
             st_dt.append(start_datetime)
             et_dt.append(end_datetime)
             durations.append(duration)
-
+            cum_durations.append(total_durations)
+            cum_gaps.append(total_gaps)
+        
         ww['start'] = {'year': st_y,
                        'month': st_m,
                        'day': st_d,
@@ -333,6 +349,8 @@ class WaitingTime(object):
         ww['start_dt'] = st_dt
         ww['end_dt'] = et_dt
         ww['duration'] = durations
+        ww['cum_duration'] = cum_durations
+        ww['cum_gap'] = cum_gaps
         
         return ww
     
@@ -361,65 +379,25 @@ class WaitingTime(object):
         return start_delay
     
     @classmethod
-    def _get_window_info(cls, weather_windows, start_date_met, idx_ww_sd):
-        
-        window_delays = []
-        window_durations = []
-        window_gaps = []
-        last_end = None
-        
-        for idx in idx_ww_sd:
-            
-            delta_st = weather_windows['start_dt'][idx] - start_date_met
-            delay = int(delta_st.total_seconds()) / 3600
-            
-            duration = weather_windows['duration'][idx]
-            
-            window_delays.append(delay)
-            window_durations.append(duration)
-            
-            delta_et = weather_windows['end_dt'][idx] - start_date_met
-            end = int(delta_et.total_seconds()) / 3600
-            
-            if last_end is None:
-                last_end = end
-                continue
-            
-            gap = end - last_end
-            last_end = end
-
-            window_gaps.append(gap)
-            
-        return window_delays, window_durations, window_gaps
-    
-    @classmethod
-    def _get_combined_windows(cls, window_delays,
-                                   window_durations,
-                                   window_gaps,
+    def _get_combined_windows(cls, all_cum_durations,
+                                   all_cum_gaps,
                                    sea_time,
-                                   idx_ww_sd):
+                                   max_delay=None):
+        
+        if max_delay is None: max_delay = np.inf
         
         delays = []
         wait_times = []
         
-        for idx in xrange(len(idx_ww_sd)):
-                        
-            delay = window_delays[idx]
-            check_durations = window_durations[idx:]
-            check_gaps = window_gaps[idx:]
+        for idx in xrange(len(all_cum_durations)):
             
-            cum_durations = np.cumsum(check_durations)
-            cum_gaps = np.cumsum(check_gaps)
+            delay, wait_time = _get_combined_delay_wait(all_cum_durations,
+                                                        all_cum_gaps,
+                                                        sea_time,
+                                                        idx)
             
-            # Leave the loop if the sea time cant be completed
-            if not (cum_durations >= sea_time).any(): break
-        
-            last_idx = np.argmax(cum_durations >= sea_time)
-            
-            if cum_gaps.size > 0 and last_idx > 0:
-                wait_time = cum_gaps[last_idx - 1]
-            else:
-                wait_time = 0.
+            if (delay == -1 or
+                delay > max_delay): break
             
             delays.append(delay)
             wait_times.append(wait_time)
@@ -549,46 +527,43 @@ class WaitingTime(object):
             # Trim the windows to the operation start
             trimmed_windows = trim_weather_windows(weather_windows,
                                                    start_date_met)
-                
-            # Look for indexes of weather windows starting after the given
-            # start date
-            idx_ww_sd = indices(trimmed_windows['start_dt'],
-                                lambda x: x >= start_date_met)
             
-            # Collect delay, duration and gaps between windows
-            (window_delays,
-             window_durations,
-             window_gaps) = self._get_window_info(trimmed_windows,
-                                                  start_date_met,
-                                                  idx_ww_sd)
-                
-            # Run through the windows, searching for the combination with least
-            # waiting time
-            delays, wait_times = self._get_combined_windows(window_delays,
-                                                            window_durations,
-                                                            window_gaps,
-                                                            sea_time,
-                                                            idx_ww_sd)
+            all_cum_durations = np.array(trimmed_windows['cum_duration'])
+            all_cum_gaps = np.array(trimmed_windows['cum_gap'])
             
-            if self._max_start_delay is not None:
-
-                # Get group of windows with waiting time below the maximum
-                year_wait_times = np.ma.masked_where(
-                                    np.array(delays) > self._max_start_delay,
-                                    wait_times)
+            if self._optimise_delay:
                 
+                (start_delay,
+                 waiting_time) = _get_combined_delay_wait(all_cum_durations,
+                                                          all_cum_gaps,
+                                                          sea_time,
+                                                          0)
+            
             else:
                 
-                year_wait_times = np.ma.array(wait_times)
+                (delays,
+                 wait_times) = self._get_combined_windows(
+                                                     all_cum_durations,
+                                                     all_cum_gaps,
+                                                     sea_time,
+                                                     self._max_start_delay)
+                
+                if not delays:
+                    
+                    start_delay = -1
+                    waiting_time = -1
+                
+                else:
+                    
+                    # Get the group of windows with minimum waiting time
+                    min_wait_idx = np.argmin(wait_times)
+                    
+                    start_delay = delays[min_wait_idx]
+                    waiting_time = wait_times[min_wait_idx]
             
             # If no cumulative windows were found (possibly within the
-            # maximum waiting time) then abort the strategy            
-            if np.ma.is_masked(year_wait_times):
-                check_mask = year_wait_times.mask.all()
-            else:
-                check_mask = False
-            
-            if not delays or check_mask:
+            # maximum waiting time) then abort the strategy
+            if start_delay == -1:
                 
                 date_format = lambda x: "{:%d-%b %H:%M}".format(x)
                 
@@ -603,23 +578,10 @@ class WaitingTime(object):
                                 "hours").format(self._max_start_delay)
                     logStr += extraStr
                 
-                module_logger.warning(logStr)            
+                module_logger.warning(logStr)
                 
                 return None, None
-    
-            if self._optimise_delay:
-                
-                # Get group of windows with minimum delay
-                min_wait_idx = 0
-                
-            else:
-                
-                # Get the group of windows with minimum waiting time
-                min_wait_idx = np.ma.argmin(year_wait_times)
-                    
-            start_delay = delays[min_wait_idx]
-            waiting_time = wait_times[min_wait_idx]
-                    
+            
             start_delays.append(start_delay)
             waiting_times.append(waiting_time)
         
@@ -862,22 +824,51 @@ def trim_weather_windows(weather_windows, op_start):
     st_dt = []
     et_dt = []
     durations = []
+    cum_durations = []
+    cum_gaps = []
     
     i = bisect_left(weather_windows['end_dt'], op_start)
     end_dt = weather_windows['end_dt'][i]
-        
+    start_dt = weather_windows['start_dt'][i]
+    cum_duration_offset = weather_windows['cum_duration'][i]
+    cum_gap_offset = weather_windows['cum_gap'][i]
+    
     if end_dt != op_start:
-
-        start_diff = end_dt - op_start
-        duration = start_diff.total_seconds() / 3600.
         
-        st_y.append(op_start.year)
-        st_m.append(op_start.month)
-        st_d.append(op_start.day)
-        st_h.append(op_start.hour)
-        st_dt.append(op_start)
-        et_dt.append(end_dt)
+        if op_start < start_dt:
+            
+            duration = weather_windows['duration'][i]
+            
+            st_y.append(start_dt.year)
+            st_m.append(start_dt.month)
+            st_d.append(start_dt.day)
+            st_h.append(start_dt.hour)
+            st_dt.append(start_dt)
+            et_dt.append(end_dt)
+            
+            extra_gap_diff = start_dt - op_start
+            extra_gap_hours = int(extra_gap_diff.total_seconds()) / 3600
+            
+            cum_gap_offset -= extra_gap_hours
+            cum_gaps.append(extra_gap_hours + cum_gap_offset)
+        
+        else:
+            
+            start_diff = end_dt - op_start
+            duration = int(start_diff.total_seconds()) / 3600
+            
+            st_y.append(op_start.year)
+            st_m.append(op_start.month)
+            st_d.append(op_start.day)
+            st_h.append(op_start.hour)
+            st_dt.append(op_start)
+            et_dt.append(end_dt)
+            cum_gaps.append(cum_gap_offset)
+        
         durations.append(duration)
+        
+        cum_duration_offset -= duration
+        cum_durations.append(duration + cum_duration_offset)
     
     st_y += weather_windows['start']['year'][i + 1:]
     st_m += weather_windows['start']['month'][i + 1:]
@@ -886,6 +877,12 @@ def trim_weather_windows(weather_windows, op_start):
     st_dt += weather_windows['start_dt'][i + 1:]
     et_dt += weather_windows['end_dt'][i + 1:]
     durations += weather_windows['duration'][i + 1:]
+    cum_durations += weather_windows['cum_duration'][i + 1:]
+    cum_gaps += weather_windows['cum_gap'][i + 1:]
+    
+    # Apply offsets to cumulative data
+    cum_durations = (np.array(cum_durations) - cum_duration_offset).tolist()
+    cum_gaps = (np.array(cum_gaps) - cum_gap_offset).tolist()
     
     new_ww = {}
     
@@ -896,8 +893,39 @@ def trim_weather_windows(weather_windows, op_start):
     new_ww['start_dt'] = st_dt
     new_ww['end_dt'] = et_dt
     new_ww['duration'] = durations
+    new_ww['cum_duration'] = cum_durations
+    new_ww['cum_gap'] = cum_gaps
     
     return new_ww
+
+
+def _get_combined_delay_wait(all_cum_durations,
+                             all_cum_gaps,
+                             sea_time,
+                             idx):
     
+    if idx == 0:
+        delay = all_cum_gaps[0]
+    else:
+        delay = all_cum_durations[idx - 1] + all_cum_gaps[idx]
     
+    if idx == 0:
+        durations_offset = 0.
+    else:
+        durations_offset = all_cum_durations[idx - 1]
     
+    gaps_offset = all_cum_gaps[idx]
+    
+    cum_durations = all_cum_durations[idx:] - durations_offset
+    cum_gaps = all_cum_gaps[idx:] - gaps_offset
+    
+    test_durations = (cum_durations >= sea_time)
+    
+    # Check if the sea time cant be completed
+    if not test_durations.any():
+        return (-1, -1)
+    
+    first_true_idx = np.argmax(test_durations)
+    wait_time = cum_gaps[first_true_idx]
+    
+    return delay, wait_time
