@@ -669,10 +669,10 @@ class WaitingTime(object):
                 msg.append("Peak period: {}s".format(olc['maxTp']))
             
             if olc['maxWs'] > 0:
-                msg.append("Maximum wind speed: {}s".format(olc['maxWs']))
+                msg.append("Maximum wind speed: {}m/s".format(olc['maxWs']))
             
             if olc['maxCs'] > 0:
-                msg.append("Maximum current speed: {}s".format(olc['maxCs']))
+                msg.append("Maximum current speed: {}m/s".format(olc['maxCs']))
             
             msg_str = ', '.join(msg)
             module_logger.info("Combined operational limit for phase {}: "
