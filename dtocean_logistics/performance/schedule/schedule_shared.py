@@ -162,8 +162,7 @@ class WaitingTime(object):
         new_metocean =  metocean[filter_years].apply(lambda x: x + add_years)
         
         final_metocean = pd.concat([final_metocean, new_metocean],
-                                   ignore_index=True,
-                                   sort=False)
+                                   ignore_index=True)
         
         assert len(final_metocean["year [-]"].unique()) == min_window_years
         
