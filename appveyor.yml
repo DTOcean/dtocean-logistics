@@ -37,11 +37,10 @@ install:
   - conda install mock pytest pytest-cov=2.5.1 pytest-mock
 
 build: off
-  
+
 test_script:
   - py.test --cov dtocean_logistics tests
-  
+
 after_test:
  - pip install codecov
  - codecov
-  
