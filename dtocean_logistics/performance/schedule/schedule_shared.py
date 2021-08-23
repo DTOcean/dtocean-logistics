@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #    Copyright (C) 2016 Boris Teillant, Paulo Chainho
-#    Copyright (C) 2017-2019 Mathew Topper
+#    Copyright (C) 2017-2021 Mathew Topper
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 """
 
 import math
-import timeit
+#import timeit
 import logging
 import datetime as dt
 from bisect import bisect_left
@@ -47,8 +47,13 @@ class WaitingTime(object):
                        match_tolerance=0.1,
                        max_start_delay=8760):
         
-        self.metocean = self._init_years(metocean, min_window_years)
+        time_step_hours = self._init_time_step_hours(metocean)
+        
+        self.metocean = self._init_years(metocean,
+                                         min_window_years,
+                                         time_step_hours)
         self._unique_years = self.metocean['year [-]'].unique()[:-1]
+        self._time_step_hours = time_step_hours
         self._match_tol = match_tolerance
         self._max_start_delay = max_start_delay
         self._optimise_delay = False
@@ -57,7 +62,31 @@ class WaitingTime(object):
         return
     
     @classmethod
-    def _init_years(cls, metocean, min_window_years):
+    def _init_time_step_hours(self, metocean):
+
+        df_time = metocean[["year [-]",
+                            "month [-]",
+                            "day [-]",
+                            "hour [-]"]]
+        df_time.columns = ["year", "month", "day", "hour"]
+        metocean_dts = pd.to_datetime(df_time)
+        
+        time_diff = metocean_dts.diff()[1:].reset_index(drop=True)
+        step_equal = np.all(time_diff == time_diff[0])
+        
+        if not step_equal:
+            err_str = "Metocean data time-step is not equal"
+            raise ValueError(err_str)
+        
+        time_step_hours_hours = time_diff[0].total_seconds() / 3600
+        
+        log_msg = "Time step is {} hours".format(time_step_hours_hours)
+        module_logger.debug(log_msg)
+        
+        return time_step_hours_hours
+    
+    @classmethod
+    def _init_years(self, metocean, min_window_years, time_step_hours):
         
         """Retain complete years in metocean data by searching for first and
         last hour of each year. Ensure that min_window_years years of data
@@ -66,7 +95,6 @@ class WaitingTime(object):
         
         # Test for first and last hour of each year (assuming hour 0 and
         # the last hour for the median time step)
-        median_step = metocean["hour [-]"].diff().median()
         year_groups = metocean.groupby('year [-]')
         
         valid_years = []
@@ -79,7 +107,7 @@ class WaitingTime(object):
             
             if not ((df["month [-]"] == 12) &
                     (df["day [-]"] == 31) &
-                    (df["hour [-]"] == (24 - median_step))).any(): continue
+                    (df["hour [-]"] == (24 - time_step_hours))).any(): continue
             
             valid_years.append(year)
         
@@ -187,8 +215,6 @@ class WaitingTime(object):
         
         # Operational limit conditions (consdiered static over the entire
         # duration of the marine operation)
-        median_step = self.metocean["hour [-]"].diff().median()
-        
         windowStr = "No weather windows were found for operational condition: "
         durationStr = ("Short durations (<8 hours) detected for operational "
                        "condition: ")
@@ -230,7 +256,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_window_indexes(Hs_bin, median_step)
+        windows = get_window_indexes(Hs_bin, self._time_step_hours)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -245,7 +271,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_window_indexes(Tp_bin, median_step)
+        windows = get_window_indexes(Tp_bin, self._time_step_hours)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -260,7 +286,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_window_indexes(Ws_bin, median_step)
+        windows = get_window_indexes(Ws_bin, self._time_step_hours)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -275,7 +301,7 @@ class WaitingTime(object):
             return ww
         
         # Check for short durations
-        windows = get_window_indexes(Cs_bin, median_step)
+        windows = get_window_indexes(Cs_bin, self._time_step_hours)
         max_duration = max(windows.values())
         
         if max_duration < 8:
@@ -298,7 +324,7 @@ class WaitingTime(object):
             return ww
         
         # Determine the starting index and the durations of the weather windows
-        windows = get_window_indexes(WW_bin, median_step)
+        windows = get_window_indexes(WW_bin, self._time_step_hours)
         
         st_y = []
         st_m = []
@@ -382,9 +408,11 @@ class WaitingTime(object):
     def _get_combined_windows(cls, all_cum_durations,
                                    all_cum_gaps,
                                    sea_time,
-                                   max_delay=None):
+                                   max_delay=None,
+                                   first_window_gap=None):
         
         if max_delay is None: max_delay = np.inf
+        if first_window_gap is None: first_window_gap = 0
         
         delays = []
         wait_times = []
@@ -397,7 +425,7 @@ class WaitingTime(object):
                                                         idx)
             
             if (delay == -1 or
-                delay > max_delay): break
+                delay + first_window_gap > max_delay): break
             
             delays.append(delay)
             wait_times.append(wait_time)
@@ -528,6 +556,10 @@ class WaitingTime(object):
             trimmed_windows = trim_weather_windows(weather_windows,
                                                    start_date_met)
             
+            # Get time to first window
+            first_window_gap = (trimmed_windows['start_dt'][0] - 
+                                        start_date_met).total_seconds() / 3600
+            
             all_cum_durations = np.array(trimmed_windows['cum_duration'])
             all_cum_gaps = np.array(trimmed_windows['cum_gap'])
             
@@ -546,7 +578,8 @@ class WaitingTime(object):
                                                      all_cum_durations,
                                                      all_cum_gaps,
                                                      sea_time,
-                                                     self._max_start_delay)
+                                                     self._max_start_delay,
+                                                     first_window_gap)
                 
                 if not delays:
                     
@@ -582,7 +615,7 @@ class WaitingTime(object):
                 
                 return None, None
             
-            start_delays.append(start_delay)
+            start_delays.append(start_delay + first_window_gap)
             waiting_times.append(waiting_time)
         
         mean_start_delay = sum(start_delays) / float(len(start_delays))
@@ -762,7 +795,7 @@ class WaitingTime(object):
         return result, 'WeatherWindowsFound'
 
 
-def get_window_indexes(WW_bin, time_step):
+def get_window_indexes(WW_bin, time_step_hours):
     
     """Return starting index and duration of window as keys and values of
     an ordered dictionary"""
@@ -774,13 +807,13 @@ def get_window_indexes(WW_bin, time_step):
     
     for group in window_groups:
         
-        duration = len(group) - 1
+        duration = len(group)
         
         # Don't allow 0 length windows
         if duration == 0: continue
         
         start_index = group[0]
-        duration = duration * time_step
+        duration = duration * time_step_hours
         
         windows[start_index] = duration
     
@@ -845,12 +878,6 @@ def trim_weather_windows(weather_windows, op_start):
             st_h.append(start_dt.hour)
             st_dt.append(start_dt)
             et_dt.append(end_dt)
-            
-            extra_gap_diff = start_dt - op_start
-            extra_gap_hours = int(extra_gap_diff.total_seconds()) / 3600
-            
-            cum_gap_offset -= extra_gap_hours
-            cum_gaps.append(extra_gap_hours + cum_gap_offset)
         
         else:
             
@@ -863,12 +890,12 @@ def trim_weather_windows(weather_windows, op_start):
             st_h.append(op_start.hour)
             st_dt.append(op_start)
             et_dt.append(end_dt)
-            cum_gaps.append(cum_gap_offset)
-        
+            
         durations.append(duration)
-        
         cum_duration_offset -= duration
         cum_durations.append(duration + cum_duration_offset)
+        
+        cum_gaps.append(cum_gap_offset)
     
     st_y += weather_windows['start']['year'][i + 1:]
     st_m += weather_windows['start']['month'][i + 1:]
