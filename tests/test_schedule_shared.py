@@ -171,7 +171,6 @@ def metocean_synth_long():
     # even months
     df_build = df_base.copy()
     years = base_time.year.unique().values[-1:]
-    print years
     months = range(1, 13)
     
     for y, m in product(years, months):
@@ -257,15 +256,17 @@ def test_WaitingTime_init_years_extra(metocean):
     
     assert all(a == b for a, b in enumerate(years, first + 1))
     assert len(test.metocean["year [-]"].unique()) == 3
-    
-    
+
+
 def test_WaitingTime_init_years_fail_missing(metocean):
     
     metocean_copy = metocean.copy()
     metocean_copy = metocean_copy[metocean_copy["year [-]"] == 1992]
     
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         WaitingTime(metocean_copy)
+    
+    assert "No complete years" in str(excinfo.value)
 
 
 def test_WaitingTime_init_years_fail_monotonic(metocean):
@@ -274,10 +275,12 @@ def test_WaitingTime_init_years_fail_monotonic(metocean):
     metocean_copy = metocean_copy[metocean_copy["year [-]"].isin([1993,
                                                                   1995])]
     
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         WaitingTime(metocean_copy)
-        
-        
+    
+    assert "not monotonic" in str(excinfo.value)
+
+
 def test_WaitingTime_set_optimise_delay(metocean):
     
     test = WaitingTime(metocean)

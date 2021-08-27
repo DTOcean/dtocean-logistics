@@ -63,27 +63,36 @@ class WaitingTime(object):
     
     @classmethod
     def _init_time_step_hours(self, metocean):
+        
+        year_groups = metocean.groupby('year [-]')
+        time_step_hours = None
+        
+        for year, df in year_groups:
+        
+            df_time = df[["year [-]",
+                          "month [-]",
+                          "day [-]",
+                          "hour [-]"]]
+            df_time.columns = ["year", "month", "day", "hour"]
+            metocean_dts = pd.to_datetime(df_time)
+            
+            time_diff = metocean_dts.diff()[1:].reset_index(drop=True)
+            step_equal = np.all(time_diff == time_diff[0])
+            year_time_step_hours = time_diff[0].total_seconds() / 3600
+            
+            if time_step_hours is None:
+                time_step_hours = year_time_step_hours
+            elif time_step_hours != year_time_step_hours:
+                step_equal = False
+            
+            if not step_equal:
+                err_str = "Metocean data time-step is not equal"
+                raise ValueError(err_str)
 
-        df_time = metocean[["year [-]",
-                            "month [-]",
-                            "day [-]",
-                            "hour [-]"]]
-        df_time.columns = ["year", "month", "day", "hour"]
-        metocean_dts = pd.to_datetime(df_time)
-        
-        time_diff = metocean_dts.diff()[1:].reset_index(drop=True)
-        step_equal = np.all(time_diff == time_diff[0])
-        
-        if not step_equal:
-            err_str = "Metocean data time-step is not equal"
-            raise ValueError(err_str)
-        
-        time_step_hours_hours = time_diff[0].total_seconds() / 3600
-        
-        log_msg = "Time step is {} hours".format(time_step_hours_hours)
+        log_msg = "Time step is {} hours".format(time_step_hours)
         module_logger.debug(log_msg)
         
-        return time_step_hours_hours
+        return time_step_hours
     
     @classmethod
     def _init_years(self, metocean, min_window_years, time_step_hours):
