@@ -607,6 +607,26 @@ def test_WaitingTime_combined_window_strategy_optimise(metocean_synth):
     assert np.isclose(waiting_time, 732.0) # 30 days, 12 hours
 
 
+def test_WaitingTime_combined_window_strategy_leap(metocean_synth):
+    
+    test = WaitingTime(metocean_synth)
+    
+    olc = {'maxHs': 0.5,
+           'maxTp': 0.5,
+           'maxWs': 0.5,
+           'maxCs': 0.5}
+    
+    windows = test.get_weather_windows(olc)
+    start_date = dt.datetime(2000, 2, 29)
+
+    start_delay, waiting_time = test._combined_window_strategy(windows,
+                                                               start_date,
+                                                               12)
+    
+    assert np.isclose(start_delay, 14.0) # (30 + 6 + 6) / 3
+    assert waiting_time == 0
+
+
 def test_WaitingTime_call(mocker, metocean):
     
     test = WaitingTime(metocean)
