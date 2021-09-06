@@ -841,8 +841,8 @@ def get_groups(data):
 
 def is_leap_year(year):
     
-    if (((year % 4 == 0) and (year % 100 != 0)) or
-        (year % 400 == 0)):
+    if ((not bool(year % 4) and bool(year % 100)) or
+        not bool(year % 400)):
         result = True
     else:
         result = False

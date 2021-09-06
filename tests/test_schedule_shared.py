@@ -30,7 +30,8 @@ from dtocean_logistics.performance.schedule.schedule_shared import (
                                                         WaitingTime,
                                                         get_window_indexes,
                                                         get_groups,
-                                                        trim_weather_windows)
+                                                        trim_weather_windows,
+                                                        is_leap_year)
 
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -612,8 +613,8 @@ def test_WaitingTime_combined_window_strategy_max_start_none(
     
     assert np.isclose(start_delay, 17534)
     assert waiting_time == 0.
-    
-    
+
+
 def test_WaitingTime_combined_window_strategy_short(metocean_synth):
     
     test = WaitingTime(metocean_synth)
@@ -625,10 +626,10 @@ def test_WaitingTime_combined_window_strategy_short(metocean_synth):
     
     windows = test.get_weather_windows(olc)
     start_date = dt.datetime(2000, 1, 1)
-
-    start_delay, waiting_time = test._combined_window_strategy(windows,
-                                                               start_date,
-                                                               24)
+    
+    _, waiting_time = test._combined_window_strategy(windows,
+                                                     start_date,
+                                                     24)
     
     assert waiting_time == 0
 
@@ -872,3 +873,22 @@ def test_get_groups(test_input, expected):
     result = get_groups(test_input)
     
     assert result == expected
+
+
+@pytest.mark.parametrize("test_input, expected", [
+    (1600, True),
+    (1700, False),
+    (1800, False),
+    (1900, False),
+    (2000, True),
+    (2001, False),
+    (2002, False),
+    (2003, False),
+    (2004, True),
+    (2100, False),
+    (2200, False),
+    (2300, False),
+])
+def test_is_leap_year(test_input, expected):
+    result = is_leap_year(test_input)
+    assert result is expected
