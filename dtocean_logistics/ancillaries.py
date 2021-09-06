@@ -106,13 +106,13 @@ def indices(a, func):
 
 def indices_gtoet(a, value):
     
-    indices = []
+    result = []
     
     for i, val in enumerate(a):
         if val >= value:
-            indices.append(i)
+            result.append(i)
         
-    return indices
+    return result
 
 
 def indices_mono_gtoet(a, value):
