@@ -840,14 +840,8 @@ def get_groups(data):
 
 
 def is_leap_year(year):
-    
-    if ((not bool(year % 4) and bool(year % 100)) or
-        not bool(year % 400)):
-        result = True
-    else:
-        result = False
-    
-    return result
+     return ((not bool(year % 4) and bool(year % 100)) or
+            not bool(year % 400))
 
 
 def trim_weather_windows(weather_windows, op_start):
