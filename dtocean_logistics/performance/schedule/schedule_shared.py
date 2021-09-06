@@ -22,6 +22,8 @@
 .. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
 
+# pragma pylint: disable=protected-access
+
 import math
 #import timeit
 import logging
@@ -62,12 +64,12 @@ class WaitingTime(object):
         return
     
     @classmethod
-    def _init_time_step_hours(self, metocean):
+    def _init_time_step_hours(cls, metocean):
         
         year_groups = metocean.groupby('year [-]')
         time_step_hours = None
         
-        for year, df in year_groups:
+        for _, df in year_groups:
         
             df_time = df[["year [-]",
                           "month [-]",
@@ -95,7 +97,7 @@ class WaitingTime(object):
         return time_step_hours
     
     @classmethod
-    def _init_years(self, metocean, min_window_years, time_step_hours):
+    def _init_years(cls, metocean, min_window_years, time_step_hours):
         
         """Retain complete years in metocean data by searching for first and
         last hour of each year. Ensure that min_window_years years of data

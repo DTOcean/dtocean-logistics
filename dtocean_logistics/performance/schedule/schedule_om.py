@@ -200,120 +200,6 @@ class SchedOM(object):
         
         return sched_sol
     
-    def _get_wws_base(self, rt_dt,
-                            waiting_time,
-                            log_phase_id,
-                            seq,
-                            ind_sol,
-                            log_phase,
-                            site,
-                            device,
-                            sub_device,
-                            entry_point,
-                            layout,
-                            om,
-                            sched_sol):
-        
-        # Retrieve stage
-        sched_sol = sched_retrieve(log_phase_id,
-                                   seq,
-                                   ind_sol,
-                                   log_phase,
-                                   site,
-                                   device,
-                                   sub_device,
-                                   entry_point,
-                                   layout,
-                                   om,
-                                   sched_sol)
-        
-        st_exp_dt_retrieve = rt_dt + dt.timedelta(
-                                hours=float(sched_sol['prep time_retrieve']))
-        journey_retrieve, WWINDOW_FLAG = waiting_time(log_phase,
-                                                      sched_sol,
-                                                      st_exp_dt_retrieve)
-        
-        # Loop if no weather window
-        if WWINDOW_FLAG == 'NoWWindows': return False
-        
-        if not sched_sol['waiting time']:
-            waiting_time_retrieve = journey_retrieve['wait_dur']
-        else:
-            waiting_time_retrieve = sched_sol['waiting time'] + \
-                                                journey_retrieve['wait_dur']
-                                        
-        start_delays = journey_retrieve['start_delay']
-        mean_retrieve_delay = sum(start_delays) / float(len(start_delays))
-                                        
-        retrieve_time = [mean_retrieve_delay] +  waiting_time_retrieve
-        om_time = float(om['d_om [hour]'].ix[0])
-                                        
-        st_rts_dt = st_exp_dt_retrieve + \
-                        dt.timedelta(hours=sum(retrieve_time)) + \
-                            dt.timedelta(hours=om_time)
-        
-        # Replace stage
-        sched_sol = sched_replace(log_phase_id,
-                                  seq,
-                                  ind_sol,
-                                  log_phase,
-                                  site,
-                                  device,
-                                  sub_device,
-                                  entry_point,
-                                  layout,
-                                  om,
-                                  sched_sol)
-        
-        st_exp_dt_replace = st_rts_dt + dt.timedelta(
-                                hours=float(sched_sol['prep time_replace']))
-        
-        ## TODO: Why is the existing total time not taken into account in this 
-        ## case?
-        journey_replace, WWINDOW_FLAG = waiting_time(log_phase,
-                                                     sched_sol,
-                                                     st_exp_dt_replace)
-        
-        # Loop if no weather window
-        if WWINDOW_FLAG == 'NoWWindows': return False
-        
-        if not sched_sol['waiting time']:
-            waiting_time_replace = journey_replace['wait_dur']
-        else:
-            waiting_time_replace = sched_sol['waiting time'] + \
-                                                journey_replace['wait_dur']
-                                        
-        start_delays = journey_replace['start_delay']
-        mean_replace_delay = sum(start_delays) / float(len(start_delays))
-        
-        replace_time = [mean_replace_delay] + waiting_time_replace
-        
-        # Record solution
-        sched_sol['waiting time_retrieve'] = waiting_time_retrieve
-        sched_sol['waiting time_replace'] = waiting_time_replace
-        sched_sol['waiting time'] = waiting_time_retrieve + \
-                                                    waiting_time_replace
-                                                
-        sched_sol['total time'] = retrieve_time + replace_time
-                                  
-        sched_sol['weather windows start_dt'] = st_exp_dt_retrieve
-        sched_sol['weather windows end_dt'] = st_exp_dt_replace + \
-                                        dt.timedelta(hours=sum(replace_time))
-        
-        depart_dt = {}
-        
-        ww_ddt_retrieve = st_exp_dt_retrieve + \
-                                    dt.timedelta(hours=mean_retrieve_delay)
-        ww_ddt_replace = st_exp_dt_replace + \
-                                    dt.timedelta(hours=mean_replace_delay)
-        
-        depart_dt['weather windows depart_dt_retrieve'] = ww_ddt_retrieve
-        depart_dt['weather windows depart_dt_replace'] = ww_ddt_replace
-        
-        sched_sol['weather windows depart_dt'] = depart_dt
-        
-        return sched_sol
-    
     def __call__(self,
                  log_phase,
                  log_phase_id,
@@ -418,19 +304,19 @@ class SchedOM(object):
                 
                 else:
                     
-                    sched_sol = self._get_wws_base(rt_dt,
-                                                   waiting_time,
-                                                   log_phase_id,
-                                                   seq,
-                                                   ind_sol,
-                                                   log_phase,
-                                                   site,
-                                                   device,
-                                                   sub_device,
-                                                   entry_point,
-                                                   layout,
-                                                   om,
-                                                   sched_sol)
+                    sched_sol = _get_wws_base(rt_dt,
+                                              waiting_time,
+                                              log_phase_id,
+                                              seq,
+                                              ind_sol,
+                                              log_phase,
+                                              site,
+                                              device,
+                                              sub_device,
+                                              entry_point,
+                                              layout,
+                                              om,
+                                              sched_sol)
                     
                     if not sched_sol: continue
                 
@@ -453,6 +339,121 @@ class SchedOM(object):
         EXIT_FLAG = 'ScheduleFound'
         
         return log_phase, EXIT_FLAG
+
+
+def _get_wws_base(rt_dt,
+                  waiting_time,
+                  log_phase_id,
+                  seq,
+                  ind_sol,
+                  log_phase,
+                  site,
+                  device,
+                  sub_device,
+                  entry_point,
+                  layout,
+                  om,
+                  sched_sol):
+    
+    # Retrieve stage
+    sched_sol = sched_retrieve(log_phase_id,
+                               seq,
+                               ind_sol,
+                               log_phase,
+                               site,
+                               device,
+                               sub_device,
+                               entry_point,
+                               layout,
+                               om,
+                               sched_sol)
+    
+    st_exp_dt_retrieve = rt_dt + dt.timedelta(
+                            hours=float(sched_sol['prep time_retrieve']))
+    journey_retrieve, WWINDOW_FLAG = waiting_time(log_phase,
+                                                  sched_sol,
+                                                  st_exp_dt_retrieve)
+    
+    # Loop if no weather window
+    if WWINDOW_FLAG == 'NoWWindows': return False
+    
+    if not sched_sol['waiting time']:
+        waiting_time_retrieve = journey_retrieve['wait_dur']
+    else:
+        waiting_time_retrieve = sched_sol['waiting time'] + \
+                                            journey_retrieve['wait_dur']
+                                    
+    start_delays = journey_retrieve['start_delay']
+    mean_retrieve_delay = sum(start_delays) / float(len(start_delays))
+                                    
+    retrieve_time = [mean_retrieve_delay] +  waiting_time_retrieve
+    om_time = float(om['d_om [hour]'].ix[0])
+                                    
+    st_rts_dt = st_exp_dt_retrieve + \
+                    dt.timedelta(hours=sum(retrieve_time)) + \
+                        dt.timedelta(hours=om_time)
+    
+    # Replace stage
+    sched_sol = sched_replace(log_phase_id,
+                              seq,
+                              ind_sol,
+                              log_phase,
+                              site,
+                              device,
+                              sub_device,
+                              entry_point,
+                              layout,
+                              om,
+                              sched_sol)
+    
+    st_exp_dt_replace = st_rts_dt + dt.timedelta(
+                            hours=float(sched_sol['prep time_replace']))
+    
+    ## TODO: Why is the existing total time not taken into account in this 
+    ## case?
+    journey_replace, WWINDOW_FLAG = waiting_time(log_phase,
+                                                 sched_sol,
+                                                 st_exp_dt_replace)
+    
+    # Loop if no weather window
+    if WWINDOW_FLAG == 'NoWWindows': return False
+    
+    if not sched_sol['waiting time']:
+        waiting_time_replace = journey_replace['wait_dur']
+    else:
+        waiting_time_replace = sched_sol['waiting time'] + \
+                                            journey_replace['wait_dur']
+                                    
+    start_delays = journey_replace['start_delay']
+    mean_replace_delay = sum(start_delays) / float(len(start_delays))
+    
+    replace_time = [mean_replace_delay] + waiting_time_replace
+    
+    # Record solution
+    sched_sol['waiting time_retrieve'] = waiting_time_retrieve
+    sched_sol['waiting time_replace'] = waiting_time_replace
+    sched_sol['waiting time'] = waiting_time_retrieve + \
+                                                waiting_time_replace
+                                            
+    sched_sol['total time'] = retrieve_time + replace_time
+                              
+    sched_sol['weather windows start_dt'] = st_exp_dt_retrieve
+    sched_sol['weather windows end_dt'] = st_exp_dt_replace + \
+                                    dt.timedelta(hours=sum(replace_time))
+    
+    depart_dt = {}
+    
+    ww_ddt_retrieve = st_exp_dt_retrieve + \
+                                dt.timedelta(hours=mean_retrieve_delay)
+    ww_ddt_replace = st_exp_dt_replace + \
+                                dt.timedelta(hours=mean_replace_delay)
+    
+    depart_dt['weather windows depart_dt_retrieve'] = ww_ddt_retrieve
+    depart_dt['weather windows depart_dt_replace'] = ww_ddt_replace
+    
+    sched_sol['weather windows depart_dt'] = depart_dt
+    
+    return sched_sol
 
 
 def get_start(om):
