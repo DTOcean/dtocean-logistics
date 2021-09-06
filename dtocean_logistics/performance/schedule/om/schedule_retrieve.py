@@ -588,49 +588,52 @@ def sched_retrieve(log_phase_id, seq, ind_sol, log_phase, site, device,
     """
     Format outputs
     """
-    sched_sol['global'] = {'nb of journeys_retrieve': nb_journey,
-                           'nb of elements per journey': nb_el_journey,
-                           'prep': {'prep_retrieve': [op_id_prep, op_dur_prep]},
-                           'sea': {'sea_retrieve': [op_id_sea, op_dur_sea, op_olc_sea]},
-                           'demob_retrieve': [op_id_demob, op_dur_demob]}
+    sched_sol['global'] = {
+            'nb of journeys_retrieve': nb_journey,
+            'nb of elements per journey': nb_el_journey,
+            'prep': {'prep_retrieve': [op_id_prep, op_dur_prep]},
+            'sea': {'sea_retrieve': [op_id_sea, op_dur_sea, op_olc_sea]},
+            'demob_retrieve': [op_id_demob, op_dur_demob]}
     # Replace 'NaN' with zeros in outputs
     # pass outputs to sched_sol
-    sched_sol['details per journey'] = {'nb of journeys_retrieve': nb_journey,
-                                        'nb of elements per journey': nb_el_journey,
-                                        'prep_retrieve': [op_id_prep_jour, op_dur_prep_jour],
-                                        'sea_retrieve': [op_id_sea_jour, op_dur_sea_jour, op_olc_jour],
-                                        'demob_retrieve': [op_id_demob_jour, op_dur_demob_jour]}
-
+    sched_sol['details per journey'] = {
+            'nb of journeys_retrieve': nb_journey,
+            'nb of elements per journey': nb_el_journey,
+            'prep_retrieve': [op_id_prep_jour, op_dur_prep_jour],
+            'sea_retrieve': [op_id_sea_jour, op_dur_sea_jour, op_olc_jour],
+            'demob_retrieve': [op_id_demob_jour, op_dur_demob_jour]}
+    
     # replace 'NaN' from the time duration values retrieved with '0'
     op_dur_prep_clean = op_dur_prep
     
     for ind_prep in range(len(op_dur_prep)):
         if math.isnan(op_dur_prep[ind_prep]):
             op_dur_prep_clean[ind_prep] = 0
-            
+    
     op_dur_sea_clean = op_dur_sea
     
     for ind_sea in range(len(op_dur_sea)):
         if math.isnan(op_dur_sea[ind_sea]):
             op_dur_sea_clean[ind_sea] = 0
-            
+    
     op_dur_demob_clean = op_dur_demob
     
     for ind_demob in range(len(op_dur_demob)):
         if math.isnan(op_dur_demob[ind_demob]):
             op_dur_demob_clean[ind_demob] = 0
-            
+    
     op_dur_transit_clean = op_dur_transit
-                
+    
     for idx in range(len(op_dur_transit)):
         if math.isnan(op_dur_transit[idx]):
             op_dur_transit_clean[idx] = 0
-            
+    
     # Calculate cumulated times
     sched_sol['prep time_retrieve'] = sum(op_dur_prep)
     sched_sol['transit time_retrieve'] = sum(op_dur_transit_clean)
     sched_sol['sea time_retrieve'] = sum(op_dur_sea)
-    sched_sol['total time_retrieve'] = sched_sol['prep time_retrieve'] + sched_sol['sea time_retrieve'] 
+    sched_sol['total time_retrieve'] = sched_sol['prep time_retrieve'] + \
+                                                sched_sol['sea time_retrieve']
     sched_sol['RtP'] = 'retrieve'
-
+    
     return sched_sol

@@ -22,8 +22,6 @@
 .. moduleauthor:: Mathew Topper <mathew.topper@dataonlygreater.com>
 """
 
-# pragma pylint: disable=protected-access
-
 import math
 #import timeit
 import logging

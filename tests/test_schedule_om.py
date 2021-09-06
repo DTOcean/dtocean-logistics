@@ -15,6 +15,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# pragma pylint: disable=no-name-in-module
+
 from datetime import datetime
 
 from dtocean_logistics.performance.schedule.schedule_om import (SchedOM,

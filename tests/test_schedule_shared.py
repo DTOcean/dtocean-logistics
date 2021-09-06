@@ -15,6 +15,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# pragma pylint: disable=protected-access
+
 import os
 import datetime as dt
 from collections import deque
@@ -24,7 +26,6 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from dtocean_logistics.ancillaries import indices
 from dtocean_logistics.performance.schedule.schedule_shared import (
                                                         WaitingTime,
                                                         get_window_indexes,

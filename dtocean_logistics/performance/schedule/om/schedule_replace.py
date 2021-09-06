@@ -433,7 +433,11 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
                         journey[jour]['sea_olc'].append(olc)
                         break
                     else:
-                        print "the only two acceptable vessel transit operation for a retrieval maintenance action should be labelled exactly 'transportation from port to site' or 'transportation from site to port'"
+                        print ("the only two acceptable vessel transit "
+                               "operation for a retrieval maintenance action "
+                               "should be labelled exactly 'transportation "
+                               "from port to site' or 'transportation from "
+                               "site to port'")
                         
                 elif log_op_sea.time_function == "distance":
                     dist_tot = 0
@@ -617,11 +621,12 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
     sched_sol['global']['demob_replace'] = [op_id_demob, op_dur_demob]
     # Replace 'NaN' with zeros in outputs
     # pass outputs to sched_sol
-    sched_sol['details per journey'] = {'nb of journeys_replace': nb_journey,
-                                        'nb of elements per journey_replace': nb_el_journey,
-                                        'prep_replace': [op_id_prep_jour, op_dur_prep_jour],
-                                        'sea_replace': [op_id_sea_jour, op_dur_sea_jour, op_olc_jour],
-                                        'demob_replace': [op_id_demob_jour, op_dur_demob_jour]}
+    sched_sol['details per journey'] = {
+            'nb of journeys_replace': nb_journey,
+            'nb of elements per journey_replace': nb_el_journey,
+            'prep_replace': [op_id_prep_jour, op_dur_prep_jour],
+            'sea_replace': [op_id_sea_jour, op_dur_sea_jour, op_olc_jour],
+            'demob_replace': [op_id_demob_jour, op_dur_demob_jour]}
 
     # replace 'NaN' from the time duration values retrieved with '0'
     op_dur_prep_clean = op_dur_prep
@@ -652,12 +657,18 @@ def sched_replace(log_phase_id, seq, ind_sol, log_phase, site, device,
     sched_sol['prep time_replace'] = sum(op_dur_prep)
     sched_sol['transit time_replace'] = sum(op_dur_transit_clean)
     sched_sol['sea time_replace'] = sum(op_dur_sea)
-    sched_sol['total time_replace'] = float(sched_sol['prep time_replace'] + sched_sol['sea time_replace'] + op_dur_demob_clean)
+    sched_sol['total time_replace'] = float(sched_sol['prep time_replace'] + 
+                                            sched_sol['sea time_replace'] +
+                                            op_dur_demob_clean)
     sched_sol['RtP'] = 'replace'
     
-    sched_sol['prep time'] = sched_sol['prep time_retrieve'] + sched_sol['prep time_replace']
-    sched_sol['transit time'] = sched_sol['transit time_retrieve'] + sched_sol['transit time_replace']
-    sched_sol['sea time'] = sched_sol['sea time_retrieve'] + sched_sol['sea time_replace']
-    sched_sol['total time'] = float(sched_sol['total time_retrieve'] + sched_sol['total time_replace'])
-
+    sched_sol['prep time'] = sched_sol['prep time_retrieve'] + \
+                                            sched_sol['prep time_replace']
+    sched_sol['transit time'] = sched_sol['transit time_retrieve'] + \
+                                            sched_sol['transit time_replace']
+    sched_sol['sea time'] = sched_sol['sea time_retrieve'] + \
+                                            sched_sol['sea time_replace']
+    sched_sol['total time'] = float(sched_sol['total time_retrieve'] +
+                                    sched_sol['total time_replace'])
+    
     return sched_sol
