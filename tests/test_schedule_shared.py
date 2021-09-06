@@ -207,6 +207,44 @@ def metocean_synth_long():
     return df_build[final_cols].reset_index(drop=True)
 
 
+@pytest.fixture(scope="module")
+def metocean_synth_non_matching_tstep():
+    
+    window_cols = ["Hs [m]", "Tp [s]", "Ws [m/s]", "Cs [m/s]"]
+    
+    # Create base time series of zeros for 3 years at 2-hour intervals
+    base_time = pd.date_range("2000-01-01",
+                              "2004-01-01",
+                              freq="2H",
+                              closed="left")
+    
+    # Add a time series with larger time step
+    extra_time =  pd.date_range("2004-01-01",
+                                "2005-01-01",
+                                freq="4H",
+                                closed="left")
+    
+    final_time = base_time.append(extra_time)
+    
+    df_base_input = {"time": final_time,
+                     "Hs [m]": 1,
+                     "Tp [s]": 1,
+                     "Ws [m/s]": 1,
+                     "Cs [m/s]": 1}
+    base_cols = ["time"] + window_cols
+    df_base = pd.DataFrame(df_base_input, columns=base_cols)
+    df_base = df_base.set_index("time", drop=True)
+    
+    df_base["year [-]"] = df_base.index.year
+    df_base["month [-]"] = df_base.index.month
+    df_base["day [-]"] = df_base.index.day
+    df_base["hour [-]"] = df_base.index.hour
+    
+    final_cols = ["year [-]", "month [-]", "day [-]", "hour [-]"] + window_cols
+    
+    return df_base[final_cols].reset_index(drop=True)
+
+
 def test_WaitingTime_init(metocean):
     result = WaitingTime(metocean)
     assert isinstance(result, WaitingTime)
@@ -279,6 +317,14 @@ def test_WaitingTime_init_years_fail_monotonic(metocean):
         WaitingTime(metocean_copy)
     
     assert "not monotonic" in str(excinfo.value)
+
+
+def test_WaitingTime_init_years_fail_tstep(metocean_synth_non_matching_tstep):
+    
+    with pytest.raises(ValueError) as excinfo:
+        WaitingTime(metocean_synth_non_matching_tstep)
+    
+    assert "not equal" in str(excinfo.value)
 
 
 def test_WaitingTime_set_optimise_delay(metocean):

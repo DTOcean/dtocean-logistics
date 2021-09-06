@@ -229,8 +229,6 @@ class SchedOM(object):
         
         st_exp_dt_retrieve = rt_dt + dt.timedelta(
                                 hours=float(sched_sol['prep time_retrieve']))
-        sea_time = sched_sol['sea time_retrieve']
-        
         journey_retrieve, WWINDOW_FLAG = waiting_time(log_phase,
                                                       sched_sol,
                                                       st_exp_dt_retrieve)
@@ -270,10 +268,8 @@ class SchedOM(object):
         st_exp_dt_replace = st_rts_dt + dt.timedelta(
                                 hours=float(sched_sol['prep time_replace']))
         
-        ## TODO: Why is this here? Also why is the existing total time not
-        ## taken into account in this case?
-        sea_time = sched_sol['sea time_replace']
-        
+        ## TODO: Why is the existing total time not taken into account in this 
+        ## case?
         journey_replace, WWINDOW_FLAG = waiting_time(log_phase,
                                                      sched_sol,
                                                      st_exp_dt_replace)
@@ -465,7 +461,7 @@ def get_start(om):
     
     if isinstance(t_start, dt.datetime):
         
-        rt_dt = t_start
+        rt_dt = t_start.replace(minute=0, second=0, microsecond=0)
     
     else:
         
