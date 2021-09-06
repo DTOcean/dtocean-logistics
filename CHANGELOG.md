@@ -20,7 +20,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -   Fixed units in logging.
 
-
 ## [2.0.0] - 2019-03-07
 
 ### Added

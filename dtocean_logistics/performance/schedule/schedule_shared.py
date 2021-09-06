@@ -840,8 +840,8 @@ def get_groups(data):
 
 
 def is_leap_year(year):
-     return ((not bool(year % 4) and bool(year % 100)) or
-            not bool(year % 400))
+    divisible = lambda x: not bool(year % x)
+    return divisible(400) if divisible(100) else divisible(4)
 
 
 def trim_weather_windows(weather_windows, op_start):
