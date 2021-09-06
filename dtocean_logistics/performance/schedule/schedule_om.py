@@ -535,7 +535,7 @@ def print_sched(new, old):
                 print "key", k
                 assert k in old_obj
                 result.extend(print_recursive(v, old_obj[k]))
-                    
+        
         elif isinstance(new_obj, list):
             
             if not isinstance(old_obj, list):
@@ -548,15 +548,15 @@ def print_sched(new, old):
                 for i, v in enumerate(new_obj):
                     print "list index", i
                     result.extend(print_recursive(v, old_obj[i]))
-                
+        
         else:
             
             if not new_obj == old_obj:
                 print "fail compare", new_obj, old_obj
                 return [False]
-            else:
-                return [True]
             
+            return [True]
+        
         return result
     
     check = []
