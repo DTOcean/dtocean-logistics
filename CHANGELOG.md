@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] - TBD
+
+### Changed
+
+-   Improved speed of weather window calculation.
+-   Improved efficiency of log phase initialisation for O&M.
+-   Improve efficiency by copying and storing sched_sol objects to check for
+    matching requirements in future calls.
+-   Improved WaitingTime class tests using synthesised time series.
+-   Enforce requirement for fixed time step for metocean input data.
+
+### Fixed
+
+-   Fixed units in logging.
+
+
 ## [2.0.0] - 2019-03-07
 
 ### Added

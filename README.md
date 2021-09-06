@@ -143,11 +143,11 @@ Please make sure to update tests as appropriate.
 This package was initially created as part of the [EU DTOcean project](
 https://www.dtoceanplus.eu/About-DTOceanPlus/History) by:
 
- * Boris Teillant at [WavEC](https://www.wavec.org/)
- * Paulo Chainho at [WavEC](https://www.wavec.org/)
- * Pedro Vicente at [WavEC](https://www.wavec.org/)
- * Mathew Topper at [TECNALIA](https://www.tecnalia.com)
- * Adam Collin at [the University of Edinburgh](https://www.ed.ac.uk/)
+*   Boris Teillant at [WavEC](https://www.wavec.org/)
+*   Paulo Chainho at [WavEC](https://www.wavec.org/)
+*   Pedro Vicente at [WavEC](https://www.wavec.org/)
+*   Mathew Topper at [TECNALIA](https://www.tecnalia.com)
+*   Adam Collin at [the University of Edinburgh](https://www.ed.ac.uk/)
 
 It is now maintained by Mathew Topper at [Data Only Greater](
 https://www.dataonlygreater.com/).
