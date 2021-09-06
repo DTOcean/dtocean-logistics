@@ -3,5 +3,8 @@ engines:
  pylint:
    enabled: true
    python_version: 2
+ pyflakes:
+   enabled: true
+   python_version: 2
  coverage:
    enabled: false

@@ -1,5 +1,5 @@
 # REQUIREMENTS FOR CONDA INSTALLATION (EXCLUDING DTOCEAN PACKAGES)
-geopy
+geopy < 2
 networkx
 matplotlib <2
 numpy

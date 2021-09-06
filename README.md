@@ -1,6 +1,6 @@
 [![appveyor](https://ci.appveyor.com/api/projects/status/github/DTOcean/dtocean-logistics?branch=master&svg=true)](https://ci.appveyor.com/project/DTOcean/dtocean-logistics)
 [![codecov](https://codecov.io/gh/DTOcean/dtocean-logistics/branch/master/graph/badge.svg)](https://codecov.io/gh/DTOcean/dtocean-logistics)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/69159a2b4c944b4c9d85046ecffa5317)](https://www.codacy.com/project/H0R5E/dtocean-logistics/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DTOcean/dtocean-logistics&amp;utm_campaign=Badge_Grade_Dashboard&amp;branchId=11717144)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ee10174eb57045b6810a066a80645e15)](https://www.codacy.com/gh/DTOcean/dtocean-logistics/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DTOcean/dtocean-logistics&amp;utm_campaign=Badge_Grade)
 [![release](https://img.shields.io/github/release/DTOcean/dtocean-logistics.svg)](https://github.com/DTOcean/dtocean-logistics/releases/latest)
 
 # DTOcean Logistics Module
@@ -16,7 +16,7 @@ See [dtocean-app](https://github.com/DTOcean/dtocean-app) or [dtocean-core](
 https://github.com/DTOcean/dtocean-app) to use this package within the DTOcean
 ecosystem.
 
-* For python 2.7 only.
+\* For python 2.7 only.
 
 ## Installation
 
@@ -45,7 +45,16 @@ channels:
 
 ```
 $ conda activate _dtocean_logis
+$ cd \\path\\to\\dtocean-logistics
 $ copy .condarc %CONDA_PREFIX%
+```
+
+OR, if you're using Powershell:
+
+```
+$ conda activate _dtocean_logis
+$ cd \\path\\to\\dtocean-logistics
+$ copy .condarc $env:CONDA_PREFIX
 ```
 
 Install [polite](https://github.com/DTOcean/polite) into the environment. For 
@@ -86,13 +95,13 @@ $ conda activate _dtocean_logis
 Install packages required for testing to the environment (one time only):
 
 ```
-$ conda install -y pytest pytest-mock
+$ conda install mock pytest pytest-cov=2.5.1 pytest-mock
 ```
 
 Run the tests:
 
 ``` 
-$ py.test tests
+$ pytest tests
 ```
 
 ### Uninstall
@@ -134,11 +143,11 @@ Please make sure to update tests as appropriate.
 This package was initially created as part of the [EU DTOcean project](
 https://www.dtoceanplus.eu/About-DTOceanPlus/History) by:
 
- * Boris Teillant at [WavEC](https://www.wavec.org/)
- * Paulo Chainho at [WavEC](https://www.wavec.org/)
- * Pedro Vicente at [WavEC](https://www.wavec.org/)
- * Mathew Topper at [TECNALIA](https://www.tecnalia.com)
- * Adam Collin at [the University of Edinburgh](https://www.ed.ac.uk/)
+*   Boris Teillant at [WavEC](https://www.wavec.org/)
+*   Paulo Chainho at [WavEC](https://www.wavec.org/)
+*   Pedro Vicente at [WavEC](https://www.wavec.org/)
+*   Mathew Topper at [TECNALIA](https://www.tecnalia.com)
+*   Adam Collin at [the University of Edinburgh](https://www.ed.ac.uk/)
 
 It is now maintained by Mathew Topper at [Data Only Greater](
 https://www.dataonlygreater.com/).
