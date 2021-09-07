@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.1.0] - TBD
+## [3.0.0] - 2021-09-07
 
 ### Changed
 
+-   Changed API for maintenance module. The sched_om function has now been
+    replaced with the SchedOM class.
 -   Improved speed of weather window calculation.
 -   Improved efficiency of log phase initialisation for O&M.
 -   Improve efficiency by copying and storing sched_sol objects to check for
