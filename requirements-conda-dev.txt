@@ -6,4 +6,4 @@ numpy
 pandas
 scipy
 utm
-xlrd
+xlrd <2

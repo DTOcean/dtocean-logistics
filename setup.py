@@ -103,7 +103,7 @@ setup(name='dtocean-logistics',
           'polite>=0.9',
           'scipy',
           'utm',
-          'xlrd'
+          'xlrd<2'
       ],
       package_data={'dtocean_logistics': ['config/*.ini']},
       zip_safe=False,
